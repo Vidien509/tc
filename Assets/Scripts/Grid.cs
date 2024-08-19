@@ -4,31 +4,35 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using CodeMonkey.Utils;
 
-public class Grid
+public class Grid : MonoBehaviour
 {
 
     private int width;
     private int height;
-    private int[,] gridArray;
+    private Celula[,] gridArray;
     private Vector3 originPosition;
     private float cellSize;
 
     private TextMesh[,] debugTextArray;
-    public Grid(int width, int height, float cellSize, Vector3 originPosition)
+    public Grid(int width, int height, float cellSize, Vector3 originPosition, GameObject cellPrefab, Transform originTransform)
     {
         this.width = width;
         this.height = height;
         this.cellSize = cellSize;
         this.originPosition = originPosition;
 
-        gridArray = new int[width, height];
-        debugTextArray = new TextMesh[width, height];
+        gridArray = new Celula[width, height];
 
         for (int x = 0; x < gridArray.GetLength(0); x++)
         {
             for (int y = 0; y < gridArray.GetLength(1); y++)
             {
-                debugTextArray[x, y] = UtilsClass.CreateWorldText(gridArray[x, y].ToString(), null, getWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, 20, Color.white, TextAnchor.MiddleCenter);
+                //debugTextArray[x, y] = UtilsClass.CreateWorldText(gridArray[x, y].ToString(), null, getWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, 20, Color.white, TextAnchor.MiddleCenter);
+                Vector3 position = new Vector3(x, y, 0);
+                GameObject cellObj = Instantiate(cellPrefab, getWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, Quaternion.identity);
+                cellObj.transform.parent = originTransform;
+                cellObj.transform.localScale = new Vector3(cellSize, cellSize, 0);
+                gridArray[x, y] = cellObj.GetComponent<Celula>();
             }
         }
     }
@@ -44,35 +48,47 @@ public class Grid
         y = Mathf.FloorToInt((worldPosition - originPosition).y / cellSize);
     }
 
-    public void setValue(int x, int y, int value)
+    public void setState(int x, int y, CellState state)
     {
         if (x >= 0 && y >= 0 && x < width && y < height)
         {
-            gridArray[x, y] = value;
-            debugTextArray[x, y].text = gridArray[x, y].ToString();
+            gridArray[x, y].SetCellState(state, "");
+        }
+    }
+    public void setState(Vector3 worldPosition, CellState state)
+    {
+        int x, y;
+        getXY(worldPosition, out x, out y);
+        setState(x, y, state);
+    }
+    public void setValue(int x, int y, string value)
+    {
+        if (x >= 0 && y >= 0 && x < width && y < height)
+        {
+            gridArray[x, y].setValue(value);
         }
     }
 
-    public void setValue(Vector3 worldPosition, int value)
+    public void setValue(Vector3 worldPosition, string value)
     {
         int x, y;
         getXY(worldPosition, out x, out y);
         setValue(x, y, value);
     }
 
-    public int getValue(int x, int y)
+    public string getValue(int x, int y)
     {
         if (x >= 0 && y >= 0 && x < width && y < height)
         {
-            return gridArray[x, y];
+            return gridArray[x, y].getValue();
         }
         else
         {
-            return 0;
+            return "";
         }
     }
 
-    public int getValue(Vector3 worldPosition)
+    public string getValue(Vector3 worldPosition)
     {
         int x, y;
         getXY(worldPosition, out x, out y);
