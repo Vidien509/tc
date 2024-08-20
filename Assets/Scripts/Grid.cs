@@ -27,12 +27,13 @@ public class Grid : MonoBehaviour
         {
             for (int y = 0; y < gridArray.GetLength(1); y++)
             {
-                //debugTextArray[x, y] = UtilsClass.CreateWorldText(gridArray[x, y].ToString(), null, getWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, 20, Color.white, TextAnchor.MiddleCenter);
                 Vector3 position = new Vector3(x, y, 0);
                 GameObject cellObj = Instantiate(cellPrefab, getWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, Quaternion.identity);
                 cellObj.transform.parent = originTransform;
                 cellObj.transform.localScale = new Vector3(cellSize, cellSize, 0);
                 gridArray[x, y] = cellObj.GetComponent<Celula>();
+                gridArray[x, y].setValue("");
+                gridArray[x, y].UpdateCellVisuals();
             }
         }
     }
@@ -52,7 +53,7 @@ public class Grid : MonoBehaviour
     {
         if (x >= 0 && y >= 0 && x < width && y < height)
         {
-            gridArray[x, y].SetCellState(state, "");
+            gridArray[x, y].SetCellState(state);
         }
     }
     public void setState(Vector3 worldPosition, CellState state)
@@ -93,5 +94,65 @@ public class Grid : MonoBehaviour
         int x, y;
         getXY(worldPosition, out x, out y);
         return (getValue(x, y));
+    }
+
+    public Celula GetCelula(Vector3 worldPosition)
+    {
+        int x, y;
+        getXY(worldPosition, out x, out y);
+        if (x >= 0 && y >= 0 && x < width && y < height)
+        {
+            return gridArray[x, y].GetComponent<Celula>();
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    private Celula ultimaCelulaHigh = null;
+    public void HighlightCelula(Vector3 worldPosition)
+    {
+        int x, y;
+        Celula cel;
+        getXY(worldPosition, out x, out y);
+        if (x >= 0 && y >= 0 && x < width && y < height)
+        {
+            cel = gridArray[x, y].GetComponent<Celula>();
+            if (cel == ultimaCelulaHigh) return;
+            SpriteRenderer renderer = cel.GetComponent<SpriteRenderer>();
+            renderer.color = Color.grey;
+
+            if (ultimaCelulaHigh)
+            {
+                ultimaCelulaHigh.UpdateCellVisuals();
+            }
+            ultimaCelulaHigh = cel;
+        }else if (ultimaCelulaHigh)
+        {
+            ultimaCelulaHigh.UpdateCellVisuals();
+            ultimaCelulaHigh = null;
+        }
+    }
+
+    public void SetRecursosAleatorios()
+    {
+        for (int x = 0; x < gridArray.GetLength(0); x++)
+        {
+            for (int y = 0; y < gridArray.GetLength(1); y++)
+            {
+                Celula cel = gridArray[x, y].GetComponent<Celula>();
+                if (Random.value < 0.02f)
+                {
+                    cel.SetCellState(CellState.recurso);  // Random.Range(1, 10)
+                    cel.setValue("1");
+                }
+                else
+                {
+                    cel.setValue("0");
+                    cel.SetCellState(CellState.vazia);
+                }
+            }
+        }
     }
 }

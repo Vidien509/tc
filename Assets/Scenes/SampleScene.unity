@@ -317,27 +317,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1694064910}
-  - component: {fileID: 1694064909}
+  - component: {fileID: 1694064911}
   m_Layer: 0
-  m_Name: testing
+  m_Name: GameController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1694064909
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1694064908}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b44063372dde904d8eaeeb0084dbe18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cellPrefab: {fileID: 5805107485338679183, guid: 50b23c6ffc5f41b458eb79c32f8a4efe, type: 3}
 --- !u!4 &1694064910
 Transform:
   m_ObjectHideFlags: 0
@@ -353,6 +340,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1694064911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1694064908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 790f95e2452e8654dba34c8e9077f5b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cellPrefab: {fileID: 5805107485338679183, guid: 50b23c6ffc5f41b458eb79c32f8a4efe, type: 3}
 --- !u!1001 &2494156705442619861
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -362,12 +362,8 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 2194347375985013660, guid: 50b23c6ffc5f41b458eb79c32f8a4efe, type: 3}
-      propertyPath: m_fontSize
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 2194347375985013660, guid: 50b23c6ffc5f41b458eb79c32f8a4efe, type: 3}
-      propertyPath: m_fontSizeBase
-      value: 4
+      propertyPath: m_text
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 2645839270132327259, guid: 50b23c6ffc5f41b458eb79c32f8a4efe, type: 3}
       propertyPath: m_LocalPosition.x
