@@ -318,6 +318,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1694064910}
   - component: {fileID: 1694064911}
+  - component: {fileID: 1694064912}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -353,6 +354,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cellPrefab: {fileID: 5805107485338679183, guid: 50b23c6ffc5f41b458eb79c32f8a4efe, type: 3}
+--- !u!114 &1694064912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1694064908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0327f32600535c429ba3ce95fb260bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  naturais: 0
+  inteiros: 0
+  racionais: 0
+  irracionais: 0
+  reais: 0
+  complexos: 0
+  algebricos: 0
+  transcendentes: 0
+  imaginarios: 0
+  complexospuros: 0
 --- !u!1001 &2494156705442619861
 PrefabInstance:
   m_ObjectHideFlags: 0

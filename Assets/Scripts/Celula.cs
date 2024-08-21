@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.ConstrainedExecution;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -15,8 +16,13 @@ public class Celula : MonoBehaviour
     {
         switch (state)
         {
+            case CellState.recurso:
+                this.AddComponent<Recurso>();
+                this.GetComponent<Recurso>().SetValorBase(double.Parse(value));
+                break;
             case CellState.extrator:
                 this.AddComponent<Extrator>();
+                this.GetComponent<Extrator>().SetValorBase(double.Parse(value));
                 break;
             case CellState.modulo:
                 this.AddComponent<Modulo>();
@@ -40,13 +46,16 @@ public class Celula : MonoBehaviour
     {
         if (newState == CellState.extrator)
         {
-            /*
-            if (value > 0)
+            if (int.Parse(value) > 0)
             {
                 state = newState;
             }
-            */
         }
+        else
+        {
+            state = newState;
+        }
+        SetComponent();
     }
     public void UpdateCellVisuals()
     {

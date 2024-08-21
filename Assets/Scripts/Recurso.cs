@@ -2,11 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Extrator : MonoBehaviour
+public class Recurso : MonoBehaviour
 {
     public double valorBase;
-    public float tempoExtracaoBase = 1f;
-    public int nivelExtrator       = 1;
     ResourceType tipoRecurso;
 
     public void SetValorBase(double valor)
@@ -19,19 +17,9 @@ public class Extrator : MonoBehaviour
         tipoRecurso = valor;
     }
 
-    public ResourceType GetTipoRecurso()
+    public ResourceType getTipoRecurso()
     {
         return tipoRecurso;
-    }
-
-    public int GetNivelExtrator()
-    {
-        return nivelExtrator;
-    }
-
-    public float GetTempoExtracaoBase()
-    {
-        return tempoExtracaoBase;
     }
 
     public double GetValorBase()

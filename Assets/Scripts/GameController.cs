@@ -8,7 +8,6 @@ public class GameController : MonoBehaviour
     public GameObject cellPrefab;
     private Grid gameGrid;
     private Grid menuGrid;
-    private Celula cel;
     private void Start()
     {
         gameGrid = new Grid(20, 10, 10f, new Vector3(0, 0, 0), cellPrefab, this.transform);
@@ -25,7 +24,7 @@ public class GameController : MonoBehaviour
         {
             Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
             cel.SetCellState(CellState.extrator);
-            cel.SetComponent();
+            this.GetComponent<ResourceController>().adicionaExtrator(cel);
         }
     }
 }

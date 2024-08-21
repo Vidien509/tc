@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using CodeMonkey.Utils;
+using System.Linq;
 
 public class Grid : MonoBehaviour
 {
@@ -144,14 +145,15 @@ public class Grid : MonoBehaviour
                 Celula cel = gridArray[x, y].GetComponent<Celula>();
                 if (Random.value < 0.02f)
                 {
-                    cel.SetCellState(CellState.recurso);  // Random.Range(1, 10)
                     cel.setValue("1");
+                    cel.SetCellState(CellState.recurso);  // Random.Range(1, 10)
                 }
                 else
                 {
                     cel.setValue("0");
                     cel.SetCellState(CellState.vazia);
                 }
+                cel.UpdateCellVisuals();
             }
         }
     }
