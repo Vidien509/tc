@@ -29,7 +29,7 @@ public class ResourceController : MonoBehaviour
     {
         if (extrator == null)
         {
-            Debug.LogError("Erro: extrator é null.");
+            Debug.Log("Erro: extrator é null.");
             return;
         }
 
@@ -41,7 +41,7 @@ public class ResourceController : MonoBehaviour
     {
         if (extrator == null)
         {
-            Debug.LogError("Erro: extrator é null.");
+            Debug.Log("Erro: extrator é null.");
             yield break;
         }
 
@@ -49,7 +49,7 @@ public class ResourceController : MonoBehaviour
 
         if (ext == null)
         {
-            Debug.LogError("Erro: Extrator componente não encontrado no GameObject " + extrator.name);
+            Debug.Log("Erro: Extrator componente não encontrado no GameObject " + extrator.name);
             yield break;
         }
 
