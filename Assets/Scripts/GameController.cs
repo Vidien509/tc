@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using CodeMonkey.Utils;
-using TMPro;
 using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
@@ -83,23 +80,30 @@ public class GameController : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
-            cel.SetCellState(stateMenuSelecionado);
-            if (stateMenuSelecionado == CellState.extrator)
+            if (cel)
             {
-                controleRecurso.adicionaExtrator(cel);
+                cel.SetCellState(stateMenuSelecionado);
+                if (stateMenuSelecionado == CellState.extrator)
+                {
+                    controleRecurso.adicionaExtrator(cel);
+                }
             }
         }
 
         if (Input.GetMouseButtonDown(1))
         {
             Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
-            if(cel.getValue() == "0") { 
-                cel.SetCellState(CellState.vazia);
-            }
-            else
+            if (cel)
             {
-                controleRecurso.ParaColeta(cel);
-                cel.SetCellState(CellState.recurso);
+                if (cel.getValue() == "0")
+                {
+                    cel.SetCellState(CellState.vazia);
+                }
+                else
+                {
+                    controleRecurso.ParaColeta(cel);
+                    cel.SetCellState(CellState.recurso);
+                }
             }
         }
     }

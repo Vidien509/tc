@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 public enum ResourceType { naturais, inteiros, racionais, irracionais, reais, complexos, algebricos, transcendentes, imaginarios, complexospuros }
 
@@ -80,33 +81,43 @@ public class ResourceController : MonoBehaviour
         {
             case ResourceType.naturais:
                 naturais += int.Parse(valor.ToString());
+                this.GetComponent<MenuController>().naturais.GetComponent<TextMeshProUGUI>().text = naturais.ToString();
                 break;
             case ResourceType.inteiros:
                 inteiros += int.Parse(valor.ToString());
+                this.GetComponent<MenuController>().inteiros.GetComponent<TextMeshProUGUI>().text = inteiros.ToString();
                 break;
             case ResourceType.racionais:
                 racionais += valor;
+                this.GetComponent<MenuController>().racionais.GetComponent<TextMeshProUGUI>().text = racionais.ToString();
                 break;
             case ResourceType.irracionais:
                 irracionais += valor;
+                this.GetComponent<MenuController>().irracionais.GetComponent<TextMeshProUGUI>().text = irracionais.ToString();
                 break;
             case ResourceType.reais:
                 reais += valor;
+                this.GetComponent<MenuController>().reais.GetComponent<TextMeshProUGUI>().text = reais.ToString();
                 break;
             case ResourceType.complexos:
                 complexos += valor;
+                this.GetComponent<MenuController>().complexos.GetComponent<TextMeshProUGUI>().text = complexos.ToString();
                 break;
             case ResourceType.algebricos:
                 algebricos += valor;
+                this.GetComponent<MenuController>().algebricos.GetComponent<TextMeshProUGUI>().text = algebricos.ToString();
                 break;
             case ResourceType.transcendentes:
                 transcendentes += valor;
+                this.GetComponent<MenuController>().transcendentes.GetComponent<TextMeshProUGUI>().text = transcendentes.ToString();
                 break;
             case ResourceType.imaginarios:
                 imaginarios += valor;
+                this.GetComponent<MenuController>().imaginarios.GetComponent<TextMeshProUGUI>().text = imaginarios.ToString();
                 break;
             case ResourceType.complexospuros:
                 complexospuros += valor;
+                //this.GetComponent<MenuController>().complexospuros.GetComponent<TextMeshProUGUI>().text = complexospuros.ToString();
                 break;
         }
     }

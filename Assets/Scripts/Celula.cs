@@ -28,7 +28,7 @@ public class Celula : MonoBehaviour
                 this.AddComponent<Modulo>();
                 break;
             case CellState.torre:
-                this.AddComponent<Menu>();
+                this.AddComponent<Torre>();
                 break;
         }
     }
