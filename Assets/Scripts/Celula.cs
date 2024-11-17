@@ -5,7 +5,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public enum CellState { vazia, recurso, extrator, modulo, torre, bloco}
+public enum CellState { vazia, torre, nucleo}
 
 public class Celula : MonoBehaviour
 {
@@ -16,17 +16,6 @@ public class Celula : MonoBehaviour
     {
         switch (state)
         {
-            case CellState.recurso:
-                this.AddComponent<Recurso>();
-                this.GetComponent<Recurso>().SetValorBase(double.Parse(value));
-                break;
-            case CellState.extrator:
-                this.AddComponent<Extrator>();
-                this.GetComponent<Extrator>().SetValorBase(double.Parse(value));
-                break;
-            case CellState.modulo:
-                this.AddComponent<Modulo>();
-                break;
             case CellState.torre:
                 this.AddComponent<Torre>();
                 break;
@@ -44,22 +33,17 @@ public class Celula : MonoBehaviour
 
     public void SetCellState(CellState newState)
     {
-        if (newState == CellState.extrator)
-        {
-            if (int.Parse(value) > 0)
-            {
-                state = newState;
-            }
-        }
-        else
-        {
-            state = newState;
-        }
+        state = newState;
         SetComponent();
     }
+
+    public CellState GetCellState()
+    {
+        return state;
+    }
+
     public void UpdateCellVisuals()
     {
-        // Aqui você pode mudar a cor da célula ou adicionar um sprite dependendo do estado
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
         TextMeshPro texto = transform.GetChild(0).GetComponent<TextMeshPro>();
         if (value != "0")
@@ -71,20 +55,11 @@ public class Celula : MonoBehaviour
             case CellState.vazia:
                 renderer.color = Color.white;
                 break;
-            case CellState.bloco:
-                renderer.color = Color.cyan;
-                break;
-            case CellState.recurso:
-                renderer.color = Color.green;
-                break;
-            case CellState.extrator:
-                renderer.color = Color.blue;
-                break;
-            case CellState.modulo:
-                renderer.color = Color.yellow;
-                break;
             case CellState.torre:
                 renderer.color = Color.red;
+                break;
+            case CellState.nucleo:
+                renderer.color = Color.blue;
                 break;
         }
     }

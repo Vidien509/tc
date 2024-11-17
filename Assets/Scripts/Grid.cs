@@ -138,23 +138,23 @@ public class Grid : MonoBehaviour
 
     public void SetRecursosAleatorios()
     {
-        int qntRecursos = 0;
         for (int x = 0; x < gridArray.GetLength(0); x++)
         {
             for (int y = 0; y < gridArray.GetLength(1); y++)
             {
                 Celula cel = gridArray[x, y].GetComponent<Celula>();
-                if (Random.value < 0.05f && qntRecursos < 3)
+                cel.setValue("0");
+                cel.SetCellState(CellState.vazia);
+                cel.UpdateCellVisuals();
+
+                int centerX = gridArray.GetLength(0) / 2;
+                int centerY = gridArray.GetLength(1) / 2;
+
+                if (x == centerX && y == centerY)
                 {
-                    qntRecursos++;
-                    cel.setValue("1");
-                    cel.SetCellState(CellState.recurso);  // Random.Range(1, 10)
+                   cel.SetCellState(CellState.nucleo);
                 }
-                else
-                {
-                    cel.setValue("0");
-                    cel.SetCellState(CellState.vazia);
-                }
+
                 cel.UpdateCellVisuals();
             }
         }

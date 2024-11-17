@@ -8,19 +8,11 @@ public class MenuController : MonoBehaviour
     public GameObject painelRecursos;
 
     public Transform naturais;
-    public Transform inteiros;
-    public Transform racionais;
-    public Transform irracionais;
-    public Transform reais;
-    public Transform complexos;
-    public Transform algebricos;
-    public Transform transcendentes;
-    public Transform imaginarios;
 
     void Start()
     {
         painelPrincipal.active = true;
-        painelRecursos.active = false;
+        painelRecursos.active = true;
     }
 
     public void TrocaMenu() {
