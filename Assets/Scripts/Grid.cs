@@ -152,7 +152,8 @@ public class Grid : MonoBehaviour
 
                 if (x == centerX && y == centerY)
                 {
-                   cel.SetCellState(CellState.nucleo);
+                    cel.setValue("100");
+                    cel.SetCellState(CellState.nucleo);
                 }
 
                 cel.UpdateCellVisuals();

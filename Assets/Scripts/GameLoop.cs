@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using CodeMonkey;
+using Unity.VisualScripting;
 public class GameLoop : MonoBehaviour
 {
-    public float tempo = 0.0f;
+    public float tempoQuestao = 0.0f;
     public int contadorQuestao = 0;
     public string sinal = "";
     public List<string> listaSinal;
@@ -26,9 +27,21 @@ public class GameLoop : MonoBehaviour
     public GameObject textoPopup;
     public GameController gameController;
 
+    public TextMeshProUGUI textFase;
+    public float tempoJogo = 0.0f;
+    private int _fase;
+    public int fase {  
+        get { return _fase; } 
+        set { 
+            _fase = value;
+            atualizaTextFase();
+        } 
+    }
+
     // Start is called before the first frame update
     void Start()
     {
+        fase = 1;
         listaSinal = new List<string> { " + ", " - ", " x ", " / " };
         menuQuestao.SetActive(false);
         gameController = transform.GetComponent<GameController>();
@@ -37,10 +50,12 @@ public class GameLoop : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        tempo += Time.deltaTime;
+        tempoQuestao += Time.deltaTime;
+        tempoJogo += Time.deltaTime;
+
         if (statusQuestao == 0)
         {
-            if (tempo >= 10)
+            if (tempoQuestao >= 10)
             {
                 contadorQuestao++;
                 menuQuestao.SetActive(true);
@@ -54,29 +69,34 @@ public class GameLoop : MonoBehaviour
 
                 calcularResposta();
                 statusQuestao = 1;
-                tempo = 0.0f;
+                tempoQuestao = 0.0f;
             }
         }else
         {
             if (verificarResposta(inputField.text)) {
                 menuQuestao.SetActive(false);
                 statusQuestao = 0;
-                tempo = 0.0f;
+                tempoQuestao = 0.0f;
                 questao = "Quanto é ";
                 GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
                 TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
                 text.color = Color.green;
                 text.text = "+ $ 10";
                 gameController.recurso += 10;
-                gameController.atualizaTextRecursos();
+                //gameController.atualizaTextRecursos();
             }
-            if (tempo >= 10)
+            if (tempoQuestao >= 10)
             {
                 menuQuestao.SetActive(false);
                 statusQuestao = 0;
-                tempo = 0.0f;
+                tempoQuestao = 0.0f;
                 questao = "Quanto é ";
             }
+        }
+
+        if(tempoJogo >= fase * 5)
+        {
+            fase += 1;
         }
     }
 
@@ -134,5 +154,10 @@ public class GameLoop : MonoBehaviour
                 Debug.LogError("Sinal inválido");
                 break;
         }
+    }
+
+    public void atualizaTextFase()
+    {
+        textFase.text = "Fase " + fase.ToString();
     }
 }

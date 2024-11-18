@@ -17,10 +17,19 @@ public class GameController : MonoBehaviour
     private CellState stateMenuSelecionado = CellState.torre;
 
     public GameObject textoPopup;
-    public int recurso = 0;
+    private int _recurso;
+    public int recurso
+    {
+        get { return _recurso; }
+        set { 
+            _recurso = value;
+            atualizaTextRecursos(); 
+        }
+    }
     public TextMeshProUGUI textRecurso;
     private void Start()
     {
+        recurso = 0;
         gameLoop = transform.GetComponent<GameLoop>();
         gameGrid = new Grid(20, 10, 10f, new Vector3(0, 0, 0), cellPrefab, this.transform);
         gameGrid.SetRecursosAleatorios();
@@ -70,16 +79,17 @@ public class GameController : MonoBehaviour
             Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
             if (cel)
             {
-                if (recurso >= 10)
+                if (recurso >= 10 && cel.GetCellState() == CellState.vazia)
                 {
                     GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
                     TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
                     text.color = Color.red;
                     text.text = "- $ 10";
                     recurso -= 10;
-                    atualizaTextRecursos();
-                    cel.SetCellState(stateMenuSelecionado);                }
-                else
+                    //atualizaTextRecursos();
+                    cel.SetCellState(stateMenuSelecionado);                
+                }
+                else if(cel.GetCellState() == CellState.vazia)
                 {
                     GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
                     TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
@@ -101,7 +111,7 @@ public class GameController : MonoBehaviour
                     text.color = Color.green;
                     text.text = "+ $ 10";
                     recurso += 10;
-                    atualizaTextRecursos();
+                    //atualizaTextRecursos();
                     cel.SetCellState(CellState.vazia);
                 }
             }

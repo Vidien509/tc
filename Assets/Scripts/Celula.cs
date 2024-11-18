@@ -19,6 +19,9 @@ public class Celula : MonoBehaviour
             case CellState.torre:
                 this.AddComponent<Torre>();
                 break;
+            case CellState.nucleo:
+                this.AddComponent<Nucleo>();
+                break;
         }
     }
 
