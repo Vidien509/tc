@@ -11,7 +11,6 @@ public class Celula : MonoBehaviour
 {
     public CellState state;
     public string value = "";
-
     public void SetComponent()
     {
         switch (state)
@@ -49,6 +48,7 @@ public class Celula : MonoBehaviour
     {
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
         TextMeshPro texto = transform.GetChild(0).GetComponent<TextMeshPro>();
+        Color corHexadecimal;
         if (value != "0")
         {
             texto.text = value;
@@ -59,10 +59,24 @@ public class Celula : MonoBehaviour
                 renderer.color = Color.white;
                 break;
             case CellState.torre:
-                renderer.color = Color.red;
+                if (UnityEngine.ColorUtility.TryParseHtmlString("#0DDBC2", out corHexadecimal))
+                {
+                    renderer.color = corHexadecimal; // Define a cor convertida do hexadecimal
+                }
+                else
+                {
+                    Debug.LogError("Erro ao converter a cor hexadecimal!");
+                }
                 break;
             case CellState.nucleo:
-                renderer.color = Color.blue;
+                if (UnityEngine.ColorUtility.TryParseHtmlString("#2EA951", out corHexadecimal))
+                {
+                    renderer.color = corHexadecimal; // Define a cor convertida do hexadecimal
+                }
+                else
+                {
+                    Debug.LogError("Erro ao converter a cor hexadecimal!");
+                }
                 break;
         }
     }

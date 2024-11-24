@@ -27,9 +27,12 @@ public class GameController : MonoBehaviour
         }
     }
     public TextMeshProUGUI textRecurso;
+    public SpawnerInimigos spawnerInimigos;
+
     private void Start()
     {
         recurso = 0;
+        spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
         gameGrid = new Grid(20, 10, 10f, new Vector3(0, 0, 0), cellPrefab, this.transform);
         gameGrid.SetRecursosAleatorios();
@@ -49,20 +52,9 @@ public class GameController : MonoBehaviour
 
         botaoTorre.onClick.AddListener(() => {
             ResetCor();
-            OnButtonClick(botaoTorre);
         });
-    }
 
-    private void OnButtonClick(Button botao)
-    {
-        if (gameLoop.statusQuestao == 0)
-        {
-            ColorBlock cb = botao.colors;
-            cb.normalColor = corSelecionada;
-            cb.highlightedColor = corSelecionada;
-            cb.pressedColor = corSelecionada * 0.8f;
-            botao.colors = cb;
-        }
+
     }
 
     public void ResetCor()
