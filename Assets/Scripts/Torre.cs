@@ -26,7 +26,7 @@ public class Torre : MonoBehaviour
     void Start()
     {
         alcance = 50f;
-        intervaloAtaque = 1f;
+        intervaloAtaque = 1.5f;
         dano = 10;
         StartCoroutine(AtaqueContinuo());
     }
@@ -80,7 +80,7 @@ public class Torre : MonoBehaviour
             Projetil scriptProjetil = projetil.GetComponent<Projetil>();
             if (scriptProjetil != null)
             {
-                scriptProjetil.Configurar(inimigo.transform, dano);
+                scriptProjetil.Configurar(inimigo.transform, dano, ProjetilTipo.Torre);
             }
         }
         else

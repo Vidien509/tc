@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ProjetilTipo { Torre, Inimigo }
+
 public class Projetil : MonoBehaviour
 {
     public float velocidade;
@@ -9,21 +11,58 @@ public class Projetil : MonoBehaviour
     private int dano;
     private bool semAlvo = false;
     private Vector3 direcaoAtual;
+    public ProjetilTipo tipo;
 
     private void Start()
     {
         velocidade = 80f;
+        AjustarAparencia();
     }
 
-    public void Configurar(Transform alvo, int dano)
+    public void Configurar(Transform alvo, int dano, ProjetilTipo tipo)
     {
         this.alvo = alvo;
         this.dano = dano;
+        this.tipo = tipo;
 
-        // Se já não houver um alvo, define uma direção padrão
         if (alvo == null)
         {
-            direcaoAtual = transform.up; // Direção padrão inicial
+            direcaoAtual = transform.up;
+        }
+
+        AjustarAparencia();
+    }
+
+    void AjustarAparencia()
+    {
+        Renderer rend = GetComponent<Renderer>();
+        if (rend != null)
+        {
+            switch (tipo)
+            {
+                case ProjetilTipo.Torre:
+                    rend.material.color = Color.blue;
+                    transform.localScale = new Vector3(1.3f, 1.3f, 1.3f);
+                    TrailRenderer trail = gameObject.AddComponent<TrailRenderer>();
+                    trail.startWidth = 0.1f;
+                    trail.endWidth = 0.05f;
+                    trail.time = 0.5f;
+                    trail.material = new Material(Shader.Find("Sprites/Default"));
+                    trail.startColor = Color.blue;
+                    trail.endColor = new Color(0, 0, 1, 0); // Vermelho transparente
+                    break;
+                case ProjetilTipo.Inimigo:
+                    rend.material.color = Color.red;
+                    transform.localScale = new Vector3(1.2f, 1.5f, 1.5f); // Forma mais alongada
+                    trail = gameObject.AddComponent<TrailRenderer>();
+                    trail.startWidth = 0.1f;
+                    trail.endWidth = 0.05f;
+                    trail.time = 0.5f;
+                    trail.material = new Material(Shader.Find("Sprites/Default"));
+                    trail.startColor = Color.red;
+                    trail.endColor = new Color(1, 0, 0, 0); // Vermelho transparente
+                    break;
+            }
         }
     }
 
@@ -33,23 +72,19 @@ public class Projetil : MonoBehaviour
         {
             if (!semAlvo)
             {
-                // Primeiro momento sem alvo: define a direção atual baseada no movimento atual
                 semAlvo = true;
-                direcaoAtual = direcaoAtual != Vector3.zero ? direcaoAtual : transform.up; // Direção já calculada ou padrão
-                Invoke(nameof(DestroyAfterTime), 2f); // Destrói após 2 segundos
+                direcaoAtual = direcaoAtual != Vector3.zero ? direcaoAtual : transform.up;
+                Invoke(nameof(DestroyAfterTime), 2f);
             }
 
-            // Move o projétil na direção previamente definida
             transform.position += direcaoAtual.normalized * velocidade * Time.deltaTime;
             return;
         }
 
-        // Move o projétil em direção ao alvo
         Vector3 direcao = alvo.position - transform.position;
-        direcaoAtual = direcao.normalized; // Atualiza a direção atual para seguir o alvo
+        direcaoAtual = direcao.normalized;
         transform.position += direcaoAtual * velocidade * Time.deltaTime;
 
-        // Verifica se o projétil atingiu o alvo
         if (Vector3.Distance(transform.position, alvo.position) < 0.1f)
         {
             AlvoAtingido();
@@ -58,16 +93,28 @@ public class Projetil : MonoBehaviour
 
     void AlvoAtingido()
     {
-        Inimigo inimigo = alvo.GetComponent<Inimigo>();
-        if (inimigo != null)
+        switch (tipo)
         {
-            inimigo.ReceberDano(dano);
+            case ProjetilTipo.Torre:
+                Inimigo inimigo = alvo.GetComponent<Inimigo>();
+                if (inimigo != null)
+                {
+                    inimigo.ReceberDano(dano);
+                }
+                break;
+            case ProjetilTipo.Inimigo:
+                Nucleo nucleo = alvo.GetComponent<Nucleo>();
+                if (nucleo != null)
+                {
+                    nucleo.ReceberDano(dano);
+                }
+                break;
         }
-        Destroy(gameObject); // Destrói o projétil
+        Destroy(gameObject);
     }
 
     void DestroyAfterTime()
     {
-        Destroy(gameObject); // Destrói o projétil após 2 segundos sem alvo
+        Destroy(gameObject);
     }
 }

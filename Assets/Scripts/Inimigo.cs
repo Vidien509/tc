@@ -6,46 +6,71 @@ using UnityEngine;
 
 public class Inimigo : MonoBehaviour
 {
-    public float velocidade; // Velocidade de movimento
+    public float velocidadeBase = 15f;
+    public float velocidade;
     public GameObject textoPopup;
     public GameController gameController;
-    private Queue<Vector3> waypoints; // Fila de waypoints para o caminho
-    private Vector3 alvoAtual; // Próximo ponto no caminho
+    public GameObject projetilPrefab; // Novo: referência ao prefab do projetil
+    private Queue<Vector3> waypoints;
+    private Vector3 alvoAtual;
     private bool chegouNoNucleo = false;
     private Nucleo nucleoAlvo;
+    private int vidaBase = 30;
     private int vida;
+    private int fase;
+    private bool temEscudo = false;
+    private float tempoUltimoAtaqueDistancia = 0f;
+    private float intervaloAtaqueDistancia;
+    private int danoAtaqueDistancia = 5;
 
     public delegate void InimigoMortoHandler();
-    public event InimigoMortoHandler onInimigoMorto; // Evento que será chamado quando o inimigo morrer
+    public event InimigoMortoHandler onInimigoMorto;
 
-    private void Start() {
+    private void Start()
+    {
+        intervaloAtaqueDistancia = 5f;
+        if (projetilPrefab == null)
+        {
+            projetilPrefab = Resources.Load<GameObject>("Prefabs/Projetil");
+            if (projetilPrefab == null)
+            {
+                Debug.LogError("Prefab do projétil não encontrado na pasta Resources/Prefabs/Projetil!");
+            }
+        }
         gameController = FindAnyObjectByType<GameController>();
-        vida = 30;
-        velocidade = 15f;
+        AtualizarAtributos();
     }
-    public void Configurar(Vector3 posicaoNucleo, Nucleo nucleo)
+
+    public void Configurar(Vector3 posicaoNucleo, Nucleo nucleo, int faseAtual)
     {
         nucleoAlvo = nucleo;
-        waypoints = GerarCaminho(transform.position, posicaoNucleo); // Gera o caminho
+        fase = faseAtual;
+        AtualizarAtributos();
+        waypoints = GerarCaminho(transform.position, posicaoNucleo);
         if (waypoints.Count > 0)
         {
-            alvoAtual = waypoints.Dequeue(); // Define o primeiro ponto como o alvo
+            alvoAtual = waypoints.Dequeue();
         }
+    }
+
+    void AtualizarAtributos()
+    {
+        vida = vidaBase + (fase * 10);
+        velocidade = velocidadeBase + (fase * 2f);
+        temEscudo = fase % 3 == 0; // Adiciona escudo a cada 3 fases
     }
 
     void Update()
     {
         if (chegouNoNucleo || nucleoAlvo == null) return;
 
-        // Move em direção ao alvo atual
         transform.position = Vector3.MoveTowards(transform.position, alvoAtual, velocidade * Time.deltaTime);
 
-        // Verifica se chegou no waypoint atual
         if (Vector3.Distance(transform.position, alvoAtual) < 0.1f)
         {
             if (waypoints.Count > 0)
             {
-                alvoAtual = waypoints.Dequeue(); // Próximo ponto
+                alvoAtual = waypoints.Dequeue();
             }
             else
             {
@@ -53,33 +78,60 @@ public class Inimigo : MonoBehaviour
                 AtacarNucleo();
             }
         }
+
+        // Ataque à distância
+        if (fase >= 5 && Time.time - tempoUltimoAtaqueDistancia > intervaloAtaqueDistancia)
+        {
+            AtaqueDistancia();
+        }
     }
 
     void AtacarNucleo()
     {
         if (nucleoAlvo != null)
         {
-            nucleoAlvo.ReceberDano(10); // Aplica 10 de dano
-            Debug.Log($"Núcleo atacado! Vida restante: {nucleoAlvo.vida}");
+            int dano = 3 + (fase * 2);
+            nucleoAlvo.ReceberDano(dano);
+            Debug.Log($"Núcleo atacado! Dano: {dano}, Vida restante: {nucleoAlvo.vida}");
         }
-        Destroy(gameObject); // Remove o inimigo após o ataque
+        Destroy(gameObject);
+    }
+
+    void AtaqueDistancia()
+    {
+        if (nucleoAlvo != null && projetilPrefab != null)
+        {
+            GameObject projetilObj = Instantiate(projetilPrefab, transform.position, Quaternion.identity);
+            Projetil projetil = projetilObj.GetComponent<Projetil>();
+            if (projetil != null)
+            {
+                projetil.Configurar(nucleoAlvo.transform, danoAtaqueDistancia, ProjetilTipo.Inimigo);
+                Debug.Log($"Projetil lançado em direção ao núcleo! Dano potencial: {danoAtaqueDistancia}");
+            }
+            else
+            {
+                Debug.LogError("Prefab do projetil não contém o componente Projetil!");
+            }
+            tempoUltimoAtaqueDistancia = Time.time;
+        }
+        else if (projetilPrefab == null)
+        {
+            Debug.LogError("Prefab do projetil não está configurado no Inimigo!");
+        }
     }
 
     Queue<Vector3> GerarCaminho(Vector3 inicio, Vector3 destino)
     {
         Queue<Vector3> caminho = new Queue<Vector3>();
-
         Vector3 posAtual = inicio;
         Vector3 diferenca = destino - inicio;
 
-        // Movimenta no eixo X até o destino X
         if (diferenca.x != 0)
         {
             Vector3 destinoX = new Vector3(destino.x, inicio.y, inicio.z);
             caminho.Enqueue(destinoX);
         }
 
-        // Movimenta no eixo Y até o destino final
         if (diferenca.y != 0)
         {
             Vector3 destinoY = new Vector3(destino.x, destino.y, inicio.z);
@@ -91,14 +143,21 @@ public class Inimigo : MonoBehaviour
 
     public void ReceberDano(int dano)
     {
+        if (temEscudo)
+        {
+            dano = Mathf.Max(1, dano / 2); // Reduz o dano pela metade se tiver escudo
+            temEscudo = false; // Remove o escudo após absorver um ataque
+        }
+
         vida -= dano;
         if (vida <= 0)
         {
-            GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+            GameObject textoPopupI = Instantiate(textoPopup, transform.position, Quaternion.identity);
             TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
             text.color = Color.green;
-            text.text = "+ $ 5";
-            gameController.recurso += 5;
+            int recompensa = 3 + (fase * 2);
+            text.text = $"+ $ {recompensa}";
+            gameController.recurso += recompensa;
             onInimigoMorto?.Invoke();
             Destroy(gameObject);
         }

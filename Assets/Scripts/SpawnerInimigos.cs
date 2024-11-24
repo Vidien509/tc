@@ -16,6 +16,7 @@ public class SpawnerInimigos : MonoBehaviour
     private int inimigosTotal;
     private int inimigosVivos; // Quantidade de inimigos vivos na fase
     private float intervaloSpawn; // Intervalo entre cada inimigo
+    public GameLoop gameLoop;
 
     public void StartSpawner(int quantidadeInimigos, float periodo)
     {
@@ -79,8 +80,11 @@ public class SpawnerInimigos : MonoBehaviour
         if (inimigo != null)
         {
             Nucleo alvo = ObterNucleoAlvo();
-            inimigo.Configurar(alvo.transform.position, alvo);
-            inimigo.onInimigoMorto += InimigoMorto; // Associa o evento de morte do inimigo
+            if (alvo != null)
+            {
+                inimigo.Configurar(alvo.transform.position, alvo, gameLoop.fase);
+                inimigo.onInimigoMorto += InimigoMorto; // Associa o evento de morte do inimigo
+            }
         }
     }
 

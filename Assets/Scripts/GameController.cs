@@ -64,47 +64,50 @@ public class GameController : MonoBehaviour
 
     private void Update()
     {
-        gameGrid.HighlightCelula(UtilsClass.GetMouseWorldPosition());
-
-        if (Input.GetMouseButtonDown(0))
+        if (!gameLoop.faseRespondendo)
         {
-            Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
-            if (cel)
+            gameGrid.HighlightCelula(UtilsClass.GetMouseWorldPosition());
+
+            if (Input.GetMouseButtonDown(0))
             {
-                if (recurso >= 10 && cel.GetCellState() == CellState.vazia)
+                Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
+                if (cel)
                 {
-                    GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-                    TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-                    text.color = Color.red;
-                    text.text = "- $ 10";
-                    recurso -= 10;
-                    //atualizaTextRecursos();
-                    cel.SetCellState(stateMenuSelecionado);                
-                }
-                else if(cel.GetCellState() == CellState.vazia)
-                {
-                    GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-                    TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-                    text.color = Color.red;
-                    text.text = "$$ Recursos insuficientes!";
+                    if (recurso >= 10 && cel.GetCellState() == CellState.vazia)
+                    {
+                        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+                        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+                        text.color = Color.red;
+                        text.text = "- $ 10";
+                        recurso -= 10;
+                        //atualizaTextRecursos();
+                        cel.SetCellState(stateMenuSelecionado);
+                    }
+                    else if (cel.GetCellState() == CellState.vazia)
+                    {
+                        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+                        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+                        text.color = Color.red;
+                        text.text = "$$ Recursos insuficientes!";
+                    }
                 }
             }
-        }
 
-        if (Input.GetMouseButtonDown(1))
-        {
-            Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
-            if (cel)
+            if (Input.GetMouseButtonDown(1))
             {
-                if (cel.getValue() == "0" && cel.GetCellState() != CellState.vazia && cel.GetCellState() != CellState.nucleo)
+                Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
+                if (cel)
                 {
-                    GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-                    TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-                    text.color = Color.green;
-                    text.text = "+ $ 10";
-                    recurso += 10;
-                    //atualizaTextRecursos();
-                    cel.SetCellState(CellState.vazia);
+                    if (cel.getValue() == "0" && cel.GetCellState() != CellState.vazia && cel.GetCellState() != CellState.nucleo)
+                    {
+                        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+                        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+                        text.color = Color.green;
+                        text.text = "+ $ 10";
+                        recurso += 10;
+                        //atualizaTextRecursos();
+                        cel.SetCellState(CellState.vazia);
+                    }
                 }
             }
         }

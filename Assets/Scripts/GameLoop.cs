@@ -40,7 +40,7 @@ public class GameLoop : MonoBehaviour
 
     private int periodoCiclo;
     private float tempoCiclo; // Tempo acumulado no ciclo
-    private bool faseRespondendo; // Indica se está no estado de responder questões
+    public bool faseRespondendo; // Indica se está no estado de responder questões
     public SpawnerInimigos spawner; // Referência ao spawner
 
     void Start()
