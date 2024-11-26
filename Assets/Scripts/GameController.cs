@@ -7,12 +7,13 @@ public class GameController : MonoBehaviour
 {
     public GameObject cellPrefab;
     private Grid gameGrid;
-    public GameLoop gameLoop;  
+    public GameLoop gameLoop;
     private string corSelecionadaHex = "#0F5080";
     private Color corSelecionada;
     private ColorBlock corOriginal;
 
-    public Button botaoTorre;
+    public Button botaoEscudo;
+    private bool escudoSelecionado = false;
 
     private CellState stateMenuSelecionado = CellState.torre;
 
@@ -21,9 +22,10 @@ public class GameController : MonoBehaviour
     public int recurso
     {
         get { return _recurso; }
-        set { 
+        set
+        {
             _recurso = value;
-            atualizaTextRecursos(); 
+            atualizaTextRecursos();
         }
     }
     public TextMeshProUGUI textRecurso;
@@ -42,24 +44,26 @@ public class GameController : MonoBehaviour
             Debug.LogError("Cor hexadecimal inválida: " + corSelecionadaHex);
         }
 
-        corOriginal = botaoTorre.colors;
-
-        ColorBlock cb = botaoTorre.colors;
-        cb.normalColor = corSelecionada;
-        cb.highlightedColor = corSelecionada;
-        cb.pressedColor = corSelecionada * 0.8f;
-        botaoTorre.colors = cb;
-
-        botaoTorre.onClick.AddListener(() => {
-            ResetCor();
+        botaoEscudo.onClick.AddListener(() => {
+            onClickBotao();
         });
 
-
+        corOriginal = botaoEscudo.colors;
     }
 
-    public void ResetCor()
+    public void onClickBotao()
     {
-        botaoTorre.colors = corOriginal;
+        escudoSelecionado = !escudoSelecionado;
+        if (escudoSelecionado)
+        {
+            ColorBlock cb = botaoEscudo.colors;
+            cb.normalColor = corSelecionada;
+            botaoEscudo.colors = cb;
+        }
+        else
+        {
+            botaoEscudo.colors = corOriginal;
+        }
     }
 
     private void Update()
@@ -73,14 +77,30 @@ public class GameController : MonoBehaviour
                 Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
                 if (cel)
                 {
-                    if (recurso >= 10 && cel.GetCellState() == CellState.vazia)
+                    if (escudoSelecionado)
+                    {
+                        if (cel.GetCellState() == CellState.nucleo)
+                        {
+                            Nucleo nucleo = cel.GetComponent<Nucleo>();
+                            if (nucleo != null)
+                            {
+                                nucleo.AdicionarVida(10);
+                                GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+                                TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+                                text.color = Color.green;
+                                text.text = "+10 Vida";
+                                escudoSelecionado = false;
+                                botaoEscudo.colors = corOriginal;
+                            }
+                        }
+                    }
+                    else if (recurso >= 10 && cel.GetCellState() == CellState.vazia)
                     {
                         GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
                         TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
                         text.color = Color.red;
                         text.text = "- $ 10";
                         recurso -= 10;
-                        //atualizaTextRecursos();
                         cel.SetCellState(stateMenuSelecionado);
                     }
                     else if (cel.GetCellState() == CellState.vazia)
@@ -95,18 +115,25 @@ public class GameController : MonoBehaviour
 
             if (Input.GetMouseButtonDown(1))
             {
-                Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
-                if (cel)
+                if (escudoSelecionado)
                 {
-                    if (cel.getValue() == "0" && cel.GetCellState() != CellState.vazia && cel.GetCellState() != CellState.nucleo)
+                    escudoSelecionado = false;
+                    botaoEscudo.colors = corOriginal;
+                }
+                else
+                {
+                    Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
+                    if (cel)
                     {
-                        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-                        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-                        text.color = Color.green;
-                        text.text = "+ $ 10";
-                        recurso += 10;
-                        //atualizaTextRecursos();
-                        cel.SetCellState(CellState.vazia);
+                        if (cel.getValue() == "0" && cel.GetCellState() != CellState.vazia && cel.GetCellState() != CellState.nucleo)
+                        {
+                            GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+                            TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+                            text.color = Color.green;
+                            text.text = "+ $ 10";
+                            recurso += 10;
+                            cel.SetCellState(CellState.vazia);
+                        }
                     }
                 }
             }

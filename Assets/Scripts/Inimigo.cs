@@ -15,7 +15,12 @@ public class Inimigo : MonoBehaviour
     private Vector3 alvoAtual;
     private bool chegouNoNucleo = false;
     private Nucleo nucleoAlvo;
+
     private int vidaBase = 30;
+    private GameObject healthBarObject;
+    private Transform healthBarFill;
+    private int vidaMaxima;
+
     private int vida;
     private int fase;
     private bool temEscudo = false;
@@ -39,6 +44,8 @@ public class Inimigo : MonoBehaviour
         }
         gameController = FindAnyObjectByType<GameController>();
         AtualizarAtributos();
+        CriarBarraDeVida();
+        AtualizarAtributos();
     }
 
     public void Configurar(Vector3 posicaoNucleo, Nucleo nucleo, int faseAtual)
@@ -55,9 +62,12 @@ public class Inimigo : MonoBehaviour
 
     void AtualizarAtributos()
     {
-        vida = vidaBase + (fase * 10);
+        vidaMaxima = vidaBase + (fase * 10);
+        vida = vidaMaxima;
         velocidade = velocidadeBase + (fase * 2f);
         temEscudo = fase % 3 == 0; // Adiciona escudo a cada 3 fases
+
+        AtualizarBarraDeVida();
     }
 
     void Update()
@@ -141,6 +151,47 @@ public class Inimigo : MonoBehaviour
         return caminho;
     }
 
+    private void CriarBarraDeVida()
+    {
+        // Criar o objeto pai da barra de vida
+        healthBarObject = new GameObject("HealthBar");
+        healthBarObject.transform.SetParent(transform);
+        healthBarObject.transform.localPosition = new Vector3(0, 1.2f, 0); // Ajuste a posição conforme necessário
+        healthBarObject.transform.localRotation = Quaternion.identity;
+
+        // Criar o fundo da barra de vida
+        GameObject healthBarBackground = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        healthBarBackground.transform.SetParent(healthBarObject.transform);
+        healthBarBackground.transform.localScale = new Vector3(1, 0.1f, 0.1f);
+        healthBarBackground.transform.localPosition = Vector3.zero;
+        healthBarBackground.GetComponent<Renderer>().material.color = Color.gray;
+
+        // Criar a parte preenchida da barra de vida
+        GameObject healthBarFillObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        healthBarFill = healthBarFillObject.transform;
+        healthBarFill.SetParent(healthBarObject.transform);
+        healthBarFill.localScale = new Vector3(1, 0.1f, 0.1f);
+        healthBarFill.localPosition = Vector3.zero;
+        healthBarFillObject.GetComponent<Renderer>().material.color = Color.green;
+
+        // Desativar os colliders
+        Destroy(healthBarBackground.GetComponent<Collider>());
+        Destroy(healthBarFillObject.GetComponent<Collider>());
+    }
+    private void AtualizarBarraDeVida()
+    {
+        if (healthBarFill != null)
+        {
+            float percentualVida = ((float)vida / vidaMaxima)*2;
+            healthBarFill.localScale = new Vector3(percentualVida, 1f, 1f);
+            healthBarFill.localPosition = new Vector3((percentualVida - 1) / 2, 0, 0);
+
+            // Atualizar a cor da barra de vida
+            Renderer renderer = healthBarFill.GetComponent<Renderer>();
+            renderer.material.color = Color.Lerp(Color.red, Color.green, percentualVida);
+        }
+    }
+
     public void ReceberDano(int dano)
     {
         if (temEscudo)
@@ -150,6 +201,8 @@ public class Inimigo : MonoBehaviour
         }
 
         vida -= dano;
+        AtualizarBarraDeVida();
+
         if (vida <= 0)
         {
             GameObject textoPopupI = Instantiate(textoPopup, transform.position, Quaternion.identity);
@@ -161,5 +214,15 @@ public class Inimigo : MonoBehaviour
             onInimigoMorto?.Invoke();
             Destroy(gameObject);
         }
+    }
+
+    private void LateUpdate()
+    {
+        //// Garantir que a barra de vida sempre olhe para a câmera
+        //if (healthBarObject != null)
+        //{
+        //    healthBarObject.transform.LookAt(Camera.main.transform);
+        //    healthBarObject.transform.Rotate(0, 180, 0);
+        //}
     }
 }

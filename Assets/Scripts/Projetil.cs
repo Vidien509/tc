@@ -13,6 +13,7 @@ public class Projetil : MonoBehaviour
     private Vector3 direcaoAtual;
     public ProjetilTipo tipo;
 
+
     private void Start()
     {
         velocidade = 80f;
@@ -38,12 +39,20 @@ public class Projetil : MonoBehaviour
         Renderer rend = GetComponent<Renderer>();
         if (rend != null)
         {
+            TrailRenderer trail;
+            if (gameObject.GetComponent<TrailRenderer>() == null)
+            {
+                trail = gameObject.AddComponent<TrailRenderer>();
+            }
+            else
+            {
+                trail = gameObject.GetComponent<TrailRenderer>();
+            }
             switch (tipo)
             {
                 case ProjetilTipo.Torre:
                     rend.material.color = Color.blue;
                     transform.localScale = new Vector3(1.3f, 1.3f, 1.3f);
-                    TrailRenderer trail = gameObject.AddComponent<TrailRenderer>();
                     trail.startWidth = 0.1f;
                     trail.endWidth = 0.05f;
                     trail.time = 0.5f;

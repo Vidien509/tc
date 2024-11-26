@@ -1228,7 +1228,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.20964745, g: 0.4445453, b: 0.5698112, a: 0}
+  m_BackGroundColor: {r: 0.046652522, g: 0.046343867, b: 0.08679241, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1431,7 +1431,7 @@ GameObject:
   - component: {fileID: 1201500241}
   - component: {fileID: 1201500240}
   m_Layer: 5
-  m_Name: Torre
+  m_Name: Escudo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1478,8 +1478,8 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.099368095, g: 0.099368095, b: 0.2735849, a: 1}
-    m_HighlightedColor: {r: 0.15686187, g: 0.19441211, b: 0.7075472, a: 1}
+    m_NormalColor: {r: 0, g: 0, b: 0, a: 0.54901963}
+    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 0.54901963}
     m_PressedColor: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
     m_SelectedColor: {r: 0.058823533, g: 0.31258598, b: 0.5019608, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
@@ -1670,7 +1670,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.105019584, g: 0.13929465, b: 0.3773585, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.54901963}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2265,7 +2265,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cellPrefab: {fileID: 5805107485338679183, guid: 50b23c6ffc5f41b458eb79c32f8a4efe, type: 3}
   gameLoop: {fileID: 0}
-  botaoTorre: {fileID: 1201500240}
+  botaoEscudo: {fileID: 1201500240}
   textoPopup: {fileID: 3781433772104376586, guid: 6e258e4e6aaba4f4c96bb7e2d6442b51, type: 3}
   textRecurso: {fileID: 1370442320}
   spawnerInimigos: {fileID: 1694064915}
@@ -2528,7 +2528,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Torre
+  m_text: Escudo
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

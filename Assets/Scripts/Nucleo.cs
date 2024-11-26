@@ -49,4 +49,9 @@ public class Nucleo : MonoBehaviour
         cel.setValue(vida.ToString());
         texto.text = cel.getValue();
     }
+
+    public void AdicionarVida(int quantidade)
+    {
+        vida += quantidade;
+    }
 }

@@ -118,6 +118,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fbee0add2fa6c94b8018b1bfd567891, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  velocidadeBase: 15
   velocidade: 2
   textoPopup: {fileID: 3781433772104376586, guid: 6e258e4e6aaba4f4c96bb7e2d6442b51, type: 3}
   gameController: {fileID: 0}
+  projetilPrefab: {fileID: 0}
