@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
+ï»¿using UnityEngine;
 using TMPro;
-using Unity.VisualScripting;
-using UnityEngine;
+
 public enum CellState { vazia, torre, nucleo }
 
 public class Celula : MonoBehaviour
@@ -11,23 +8,69 @@ public class Celula : MonoBehaviour
     public CellState state;
     public string value = "";
     private LineRenderer borderRenderer;
+    private GameObject torreVisual;
 
-    [SerializeField]
-    private float borderWidth;
+    [SerializeField] private float borderWidth = 0.1f;
+    [SerializeField] private float borderInset = 0.05f;
+    [SerializeField] private float torreSize = 0.4f;
 
-    [SerializeField]
-    private float borderInset; // Novo: inset para evitar sobreposição
+    private Color[] coresTorre = new Color[]
+    {
+        new Color(0.05f, 0.86f, 0.76f), // NÃ­vel 0
+        new Color(0.13f, 0.59f, 0.95f), // NÃ­vel 1
+        new Color(0.54f, 0.17f, 0.89f), // NÃ­vel 2
+        new Color(1f, 0.84f, 0f)        // NÃ­vel 3
+    };
 
     void Awake()
     {
-        borderWidth = 0.5f;
-        borderInset = 0.05f;
+        SetupBorderRenderer();
+        SetupTorreVisual();
+    }
+
+    private void SetupBorderRenderer()
+    {
         borderRenderer = gameObject.AddComponent<LineRenderer>();
         borderRenderer.positionCount = 5;
         borderRenderer.loop = true;
         borderRenderer.useWorldSpace = false;
         borderRenderer.material = new Material(Shader.Find("Sprites/Default"));
         UpdateBorderWidth();
+    }
+
+    private void SetupTorreVisual()
+    {
+        torreVisual = new GameObject("TorreVisual");
+        torreVisual.transform.SetParent(transform);
+        torreVisual.transform.localPosition = Vector3.zero;
+        SpriteRenderer spriteRenderer = torreVisual.AddComponent<SpriteRenderer>();
+        spriteRenderer.sprite = CreateArrowSprite();
+        torreVisual.SetActive(false);
+    }
+
+    private Sprite CreateArrowSprite()
+    {
+        Texture2D texture = new Texture2D(32, 32);
+        for (int y = 0; y < 32; y++)
+        {
+            for (int x = 0; x < 32; x++)
+            {
+                if (y > x * 0.8f && y < 32 - x * 0.8f && x < 24)
+                {
+                    texture.SetPixel(x, y, Color.white);
+                }
+                else if (x >= 24 && x < 28 && y > 12 && y < 20)
+                {
+                    texture.SetPixel(x, y, Color.white);
+                }
+                else
+                {
+                    texture.SetPixel(x, y, Color.clear);
+                }
+            }
+        }
+        texture.Apply();
+        return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.25f, 0.5f));
     }
 
     private void UpdateBorderWidth()
@@ -41,10 +84,12 @@ public class Celula : MonoBehaviour
         switch (state)
         {
             case CellState.torre:
-                this.AddComponent<Torre>();
+                if (GetComponent<Torre>() == null)
+                    gameObject.AddComponent<Torre>();
                 break;
             case CellState.nucleo:
-                this.AddComponent<Nucleo>();
+                if (GetComponent<Nucleo>() == null)
+                    gameObject.AddComponent<Nucleo>();
                 break;
         }
     }
@@ -63,6 +108,7 @@ public class Celula : MonoBehaviour
     {
         state = newState;
         SetComponent();
+        UpdateCellVisuals();
     }
 
     public CellState GetCellState()
@@ -91,30 +137,38 @@ public class Celula : MonoBehaviour
         {
             case CellState.vazia:
                 corBorda = Color.white;
+                torreVisual.SetActive(false);
                 break;
             case CellState.torre:
-                if (!UnityEngine.ColorUtility.TryParseHtmlString("#0DDBC2", out corBorda))
+                Torre torre = GetComponent<Torre>();
+                if (torre != null)
                 {
-                    corBorda = Color.cyan;
-                    Debug.LogError("Erro ao converter a cor hexadecimal para torre!");
+                    corBorda = coresTorre[torre.nivel];
                 }
+                else
+                {
+                    corBorda = coresTorre[0];
+                }
+                torreVisual.SetActive(true);
+                torreVisual.GetComponent<SpriteRenderer>().color = corBorda;
                 break;
             case CellState.nucleo:
                 if (!UnityEngine.ColorUtility.TryParseHtmlString("#2EA951", out corBorda))
                 {
                     corBorda = Color.green;
-                    Debug.LogError("Erro ao converter a cor hexadecimal para núcleo!");
+                    Debug.LogError("Erro ao converter a cor hexadecimal para nÃºcleo!");
                 }
+                torreVisual.SetActive(false);
                 break;
             default:
                 corBorda = Color.white;
+                torreVisual.SetActive(false);
                 break;
         }
 
         borderRenderer.startColor = corBorda;
         borderRenderer.endColor = corBorda;
 
-        // Ajuste nas posições da borda para evitar sobreposição
         float halfWidth = 0.5f - borderInset;
         borderRenderer.SetPositions(new Vector3[]
         {
@@ -134,10 +188,36 @@ public class Celula : MonoBehaviour
         UpdateBorderWidth();
     }
 
-    // Novo método para ajustar o inset da borda
     public void SetBorderInset(float inset)
     {
         borderInset = inset;
         UpdateCellVisuals();
     }
+
+    public void UpdateTorreDirection(Vector3 direction)
+    {
+        if (state == CellState.torre && torreVisual != null)
+        {
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            torreVisual.transform.rotation = Quaternion.Euler(0, 0, angle);
+        }
+    }
+
+    public void AtualizarVisualTorre(int nivel)
+    {
+        if (state == CellState.torre && torreVisual != null)
+        {
+            SpriteRenderer spriteRenderer = torreVisual.GetComponent<SpriteRenderer>();
+            spriteRenderer.color = coresTorre[Mathf.Clamp(nivel, 0, coresTorre.Length - 1)];
+
+            // Aumentar o tamanho da torre com base no nÃ­vel
+            float escala = 1f + (nivel * 0.1f);
+            torreVisual.transform.localScale = new Vector3(escala, escala, 1f);
+
+            // Atualizar a borda
+            borderRenderer.startColor = coresTorre[Mathf.Clamp(nivel, 0, coresTorre.Length - 1)];
+            borderRenderer.endColor = coresTorre[Mathf.Clamp(nivel, 0, coresTorre.Length - 1)];
+        }
+    }
 }
+

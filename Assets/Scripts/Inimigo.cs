@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Inimigo : MonoBehaviour
 {
-    public float velocidadeBase = 15f;
+    public float velocidadeBase = 7f;
     public float velocidade;
     public GameObject textoPopup;
     public GameController gameController;
@@ -214,15 +214,5 @@ public class Inimigo : MonoBehaviour
             onInimigoMorto?.Invoke();
             Destroy(gameObject);
         }
-    }
-
-    private void LateUpdate()
-    {
-        //// Garantir que a barra de vida sempre olhe para a câmera
-        //if (healthBarObject != null)
-        //{
-        //    healthBarObject.transform.LookAt(Camera.main.transform);
-        //    healthBarObject.transform.Rotate(0, 180, 0);
-        //}
     }
 }

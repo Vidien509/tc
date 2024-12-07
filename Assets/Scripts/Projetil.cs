@@ -16,7 +16,7 @@ public class Projetil : MonoBehaviour
 
     private void Start()
     {
-        velocidade = 80f;
+        velocidade = 40f;
         AjustarAparencia();
     }
 
@@ -94,7 +94,7 @@ public class Projetil : MonoBehaviour
         direcaoAtual = direcao.normalized;
         transform.position += direcaoAtual * velocidade * Time.deltaTime;
 
-        if (Vector3.Distance(transform.position, alvo.position) < 0.1f)
+        if (Vector3.Distance(transform.position, alvo.position) < 0.2f)
         {
             AlvoAtingido();
         }

@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using CodeMonkey.Utils;
 using UnityEngine.UI;
 using TMPro;
@@ -16,6 +16,8 @@ public class GameController : MonoBehaviour
     private bool escudoSelecionado = false;
 
     private CellState stateMenuSelecionado = CellState.torre;
+    private int precoTorre = 10;
+    private int precoUpgrade = 5;
 
     public GameObject textoPopup;
     private int _recurso;
@@ -36,12 +38,12 @@ public class GameController : MonoBehaviour
         recurso = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
-        gameGrid = new Grid(20, 10, 10f, new Vector3(0, 0, 0), cellPrefab, this.transform);
+        gameGrid = new Grid(14, 10, 4f, new Vector3(-30, -20, 0), cellPrefab, this.transform);
         gameGrid.SetRecursosAleatorios();
 
         if (!ColorUtility.TryParseHtmlString(corSelecionadaHex, out corSelecionada))
         {
-            Debug.LogError("Cor hexadecimal inválida: " + corSelecionadaHex);
+            Debug.LogError("Cor hexadecimal invï¿½lida: " + corSelecionadaHex);
         }
 
         botaoEscudo.onClick.AddListener(() => {
@@ -94,22 +96,22 @@ public class GameController : MonoBehaviour
                             }
                         }
                     }
-                    else if (recurso >= 10 && cel.GetCellState() == CellState.vazia)
-                    {
-                        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-                        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-                        text.color = Color.red;
-                        text.text = "- $ 10";
-                        recurso -= 10;
-                        cel.SetCellState(stateMenuSelecionado);
-                    }
                     else if (cel.GetCellState() == CellState.vazia)
                     {
-                        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-                        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-                        text.color = Color.red;
-                        text.text = "$$ Recursos insuficientes!";
+                        if (recurso >= precoTorre)
+                        {
+                            ComprarTorre(cel);
+                        }
+                        else
+                        {
+                            MostrarMensagemRecursosInsuficientes(precoTorre);
+                        }
                     }
+                    else if (cel.GetCellState() == CellState.torre)
+                    {
+                        UpgradeTorre(cel);
+                    }
+
                 }
             }
 
@@ -130,14 +132,55 @@ public class GameController : MonoBehaviour
                             GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
                             TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
                             text.color = Color.green;
-                            text.text = "+ $ 10";
-                            recurso += 10;
+                            text.text = "+ $ " + precoTorre;
+                            recurso += precoTorre;
                             cel.SetCellState(CellState.vazia);
                         }
                     }
                 }
             }
         }
+    }
+
+    private void ComprarTorre(Celula cel)
+    {
+        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+        text.color = Color.red;
+        text.text = "- $ " + precoTorre;
+        recurso -= precoTorre;
+        precoTorre += gameLoop.fase;
+        cel.SetCellState(stateMenuSelecionado);
+    }
+
+    private void UpgradeTorre(Celula cel)
+    {
+        Torre torre = cel.GetComponent<Torre>();
+        if (torre != null && torre.nivel < 3)
+        {
+            int custoUpgrade = precoUpgrade * (torre.nivel + 1);
+            if (recurso >= custoUpgrade)
+            {
+                recurso -= custoUpgrade;
+                torre.Upgrade();
+                GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+                TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+                text.color = Color.yellow;
+                text.text = "Upgrade! - $ " + custoUpgrade;
+            }
+            else
+            {
+                MostrarMensagemRecursosInsuficientes(custoUpgrade);
+            }
+        }
+    }
+
+    private void MostrarMensagemRecursosInsuficientes(int custo)
+    {
+        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+        text.color = Color.red;
+        text.text = custo + " $$ Recursos insuficientes!";
     }
 
     public void SetStateMenuSelecionado(string opcao)
@@ -158,3 +201,4 @@ public class GameController : MonoBehaviour
         textRecurso.text = recurso.ToString();
     }
 }
+

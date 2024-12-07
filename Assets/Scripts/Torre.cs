@@ -1,19 +1,19 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Torre : MonoBehaviour
 {
-    public float alcance; // Alcance da torre para detectar inimigos
-    public float intervaloAtaque; // Intervalo entre os ataques
-    public int dano; // Dano causado pela torre
-    public GameObject prefabProjetil; // Prefab do projétil
+    public float alcance;
+    public float intervaloAtaque;
+    public int dano;
+    public GameObject prefabProjetil;
+    public int nivel = 0;
 
     private Inimigo alvoAtual;
+    private Celula celula;
 
     private void Awake()
     {
-        // Carrega automaticamente o prefab do projétil a partir da pasta Resources
         if (prefabProjetil == null)
         {
             prefabProjetil = Resources.Load<GameObject>("Prefabs/Projetil");
@@ -22,19 +22,40 @@ public class Torre : MonoBehaviour
                 Debug.LogError("Prefab do projétil não encontrado na pasta Resources/Prefabs/Projetil!");
             }
         }
+        celula = GetComponent<Celula>();
     }
+
     void Start()
     {
-        alcance = 50f;
-        intervaloAtaque = 1.5f;
-        dano = 10;
+        AtualizarAtributos();
         StartCoroutine(AtaqueContinuo());
     }
 
     void Update()
     {
-        // Atualiza o alvo para o inimigo mais próximo dentro do alcance
         alvoAtual = DetectarInimigoMaisProximo();
+        if (alvoAtual != null && celula != null)
+        {
+            Vector3 direcao = alvoAtual.transform.position - transform.position;
+            celula.UpdateTorreDirection(direcao);
+        }
+    }
+
+    public void Upgrade()
+    {
+        if (nivel < 3)
+        {
+            nivel++;
+            AtualizarAtributos();
+            celula.AtualizarVisualTorre(nivel);
+        }
+    }
+
+    private void AtualizarAtributos()
+    {
+        alcance = 20f + (nivel * 5f);
+        intervaloAtaque = 1.5f - (nivel * 0.25f);
+        dano = 10 + (nivel * 5);
     }
 
     IEnumerator AtaqueContinuo()
@@ -73,27 +94,59 @@ public class Torre : MonoBehaviour
     void Atacar(Inimigo inimigo)
     {
         if (inimigo == null) return;
-        // Opcional: Instanciar projétil
+
         if (prefabProjetil != null)
         {
-            GameObject projetil = Instantiate(prefabProjetil, transform.position, Quaternion.identity);
-            Projetil scriptProjetil = projetil.GetComponent<Projetil>();
-            if (scriptProjetil != null)
+            switch (nivel)
             {
-                scriptProjetil.Configurar(inimigo.transform, dano, ProjetilTipo.Torre);
+                case 0:
+                case 1:
+                    LancarProjetil(inimigo.transform);
+                    break;
+                case 2:
+                    StartCoroutine(LancarProjetilDuplo(inimigo.transform));
+                    break;
+                case 3:
+                    StartCoroutine(LancarProjetilTriplo(inimigo.transform));
+                    break;
             }
         }
         else
         {
-            // Caso não tenha projétil, aplicar dano diretamente
             inimigo.ReceberDano(dano);
         }
     }
 
+    void LancarProjetil(Transform alvo)
+    {
+        GameObject projetil = Instantiate(prefabProjetil, transform.position, Quaternion.identity);
+        Projetil scriptProjetil = projetil.GetComponent<Projetil>();
+        if (scriptProjetil != null)
+        {
+            scriptProjetil.Configurar(alvo, dano, ProjetilTipo.Torre);
+        }
+    }
+
+    IEnumerator LancarProjetilDuplo(Transform alvo)
+    {
+        LancarProjetil(alvo);
+        yield return new WaitForSeconds(0.1f);
+        LancarProjetil(alvo);
+    }
+
+    IEnumerator LancarProjetilTriplo(Transform alvo)
+    {
+        LancarProjetil(alvo);
+        yield return new WaitForSeconds(0.1f);
+        LancarProjetil(alvo);
+        yield return new WaitForSeconds(0.1f);
+        LancarProjetil(alvo);
+    }
+
     void OnDrawGizmosSelected()
     {
-        // Desenha o alcance da torre no editor
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, alcance);
     }
 }
+
