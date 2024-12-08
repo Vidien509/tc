@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 
+public enum TorreType { Basic, Gelo, Fogo, Plasma }
+
 public class Torre : MonoBehaviour
 {
     public float alcance;
@@ -8,6 +10,7 @@ public class Torre : MonoBehaviour
     public int dano;
     public GameObject prefabProjetil;
     public int nivel = 0;
+    public TorreType tipo = TorreType.Basic;
 
     private Inimigo alvoAtual;
     private Celula celula;
@@ -41,21 +44,49 @@ public class Torre : MonoBehaviour
         }
     }
 
+    public void SetTorreType(TorreType novoTipo)
+    {
+        tipo = novoTipo;
+        nivel = 0;
+        AtualizarAtributos();
+        celula.AtualizarVisualTorre(tipo, nivel);
+    }
+
     public void Upgrade()
     {
         if (nivel < 3)
         {
             nivel++;
             AtualizarAtributos();
-            celula.AtualizarVisualTorre(nivel);
+            celula.AtualizarVisualTorre(tipo, nivel);
         }
     }
 
     private void AtualizarAtributos()
     {
-        alcance = 20f + (nivel * 5f);
-        intervaloAtaque = 1.5f - (nivel * 0.25f);
-        dano = 10 + (nivel * 5);
+        switch (tipo)
+        {
+            case TorreType.Basic:
+                alcance = 20f + (nivel * 5f);
+                intervaloAtaque = 1.5f - (nivel * 0.25f);
+                dano = 10 + (nivel * 5);
+                break;
+            case TorreType.Gelo:
+                alcance = 15f + (nivel * 3f);
+                intervaloAtaque = 2f - (nivel * 0.3f);
+                dano = 5 + (nivel * 3);
+                break;
+            case TorreType.Fogo:
+                alcance = 18f + (nivel * 4f);
+                intervaloAtaque = 1.2f - (nivel * 0.2f);
+                dano = 8 + (nivel * 4);
+                break;
+            case TorreType.Plasma:
+                alcance = 25f + (nivel * 6f);
+                intervaloAtaque = 2.5f - (nivel * 0.4f);
+                dano = 15 + (nivel * 7);
+                break;
+        }
     }
 
     IEnumerator AtaqueContinuo()
@@ -97,19 +128,7 @@ public class Torre : MonoBehaviour
 
         if (prefabProjetil != null)
         {
-            switch (nivel)
-            {
-                case 0:
-                case 1:
-                    LancarProjetil(inimigo.transform);
-                    break;
-                case 2:
-                    StartCoroutine(LancarProjetilDuplo(inimigo.transform));
-                    break;
-                case 3:
-                    StartCoroutine(LancarProjetilTriplo(inimigo.transform));
-                    break;
-            }
+            LancarProjetil(inimigo.transform);
         }
         else
         {
@@ -123,30 +142,29 @@ public class Torre : MonoBehaviour
         Projetil scriptProjetil = projetil.GetComponent<Projetil>();
         if (scriptProjetil != null)
         {
-            scriptProjetil.Configurar(alvo, dano, ProjetilTipo.Torre);
+            scriptProjetil.Configurar(alvo, dano, TipoTorreParaProjetil(tipo));
         }
-    }
-
-    IEnumerator LancarProjetilDuplo(Transform alvo)
-    {
-        LancarProjetil(alvo);
-        yield return new WaitForSeconds(0.1f);
-        LancarProjetil(alvo);
-    }
-
-    IEnumerator LancarProjetilTriplo(Transform alvo)
-    {
-        LancarProjetil(alvo);
-        yield return new WaitForSeconds(0.1f);
-        LancarProjetil(alvo);
-        yield return new WaitForSeconds(0.1f);
-        LancarProjetil(alvo);
     }
 
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, alcance);
+    }
+
+    private ProjetilTipo TipoTorreParaProjetil(TorreType tipoTorre)
+    {
+        switch (tipoTorre)
+        {
+            case TorreType.Gelo:
+                return ProjetilTipo.Gelo;
+            case TorreType.Fogo:
+                return ProjetilTipo.Fogo;
+            case TorreType.Plasma:
+                return ProjetilTipo.Plasma;
+            default:
+                return ProjetilTipo.Basic;
+        }
     }
 }
 

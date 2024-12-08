@@ -1,4 +1,4 @@
-using CodeMonkey.Utils;
+ï»¿using CodeMonkey.Utils;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -10,17 +10,13 @@ public class Inimigo : MonoBehaviour
     public float velocidade;
     public GameObject textoPopup;
     public GameController gameController;
-    public GameObject projetilPrefab; // Novo: referência ao prefab do projetil
+    public GameObject projetilPrefab;
     private Queue<Vector3> waypoints;
     private Vector3 alvoAtual;
     private bool chegouNoNucleo = false;
     private Nucleo nucleoAlvo;
-
     private int vidaBase = 30;
-    private GameObject healthBarObject;
-    private Transform healthBarFill;
     private int vidaMaxima;
-
     private int vida;
     private int fase;
     private bool temEscudo = false;
@@ -28,8 +24,16 @@ public class Inimigo : MonoBehaviour
     private float intervaloAtaqueDistancia;
     private int danoAtaqueDistancia = 5;
 
+    private GameObject healthBarObject;
+    private Transform healthBarFill;
+
     public delegate void InimigoMortoHandler();
     public event InimigoMortoHandler onInimigoMorto;
+
+    private float velocidadeOriginal;
+    private float tempoCongelado;
+    private float tempoQueimando;
+    private int danoQueimadura;
 
     private void Start()
     {
@@ -39,13 +43,13 @@ public class Inimigo : MonoBehaviour
             projetilPrefab = Resources.Load<GameObject>("Prefabs/Projetil");
             if (projetilPrefab == null)
             {
-                Debug.LogError("Prefab do projétil não encontrado na pasta Resources/Prefabs/Projetil!");
+                Debug.LogError("Prefab do projÃ©til nÃ£o encontrado na pasta Resources/Prefabs/Projetil!");
             }
         }
         gameController = FindAnyObjectByType<GameController>();
         AtualizarAtributos();
         CriarBarraDeVida();
-        AtualizarAtributos();
+        AtualizarBarraDeVida();
     }
 
     public void Configurar(Vector3 posicaoNucleo, Nucleo nucleo, int faseAtual)
@@ -58,6 +62,7 @@ public class Inimigo : MonoBehaviour
         {
             alvoAtual = waypoints.Dequeue();
         }
+
     }
 
     void AtualizarAtributos()
@@ -66,7 +71,6 @@ public class Inimigo : MonoBehaviour
         vida = vidaMaxima;
         velocidade = velocidadeBase + (fase * 2f);
         temEscudo = fase % 3 == 0; // Adiciona escudo a cada 3 fases
-
         AtualizarBarraDeVida();
     }
 
@@ -89,10 +93,25 @@ public class Inimigo : MonoBehaviour
             }
         }
 
-        // Ataque à distância
+        // Ataque Ã  distÃ¢ncia
         if (fase >= 5 && Time.time - tempoUltimoAtaqueDistancia > intervaloAtaqueDistancia)
         {
             AtaqueDistancia();
+        }
+
+        if (tempoCongelado > 0)
+        {
+            tempoCongelado -= Time.deltaTime;
+            if (tempoCongelado <= 0)
+            {
+                velocidade = velocidadeOriginal;
+            }
+        }
+
+        if (tempoQueimando > 0)
+        {
+            tempoQueimando -= Time.deltaTime;
+            ReceberDano((int)(danoQueimadura * Time.deltaTime));
         }
     }
 
@@ -102,7 +121,7 @@ public class Inimigo : MonoBehaviour
         {
             int dano = 3 + (fase * 2);
             nucleoAlvo.ReceberDano(dano);
-            Debug.Log($"Núcleo atacado! Dano: {dano}, Vida restante: {nucleoAlvo.vida}");
+            Debug.Log($"NÃºcleo atacado! Dano: {dano}, Vida restante: {nucleoAlvo.vida}");
         }
         Destroy(gameObject);
     }
@@ -116,17 +135,17 @@ public class Inimigo : MonoBehaviour
             if (projetil != null)
             {
                 projetil.Configurar(nucleoAlvo.transform, danoAtaqueDistancia, ProjetilTipo.Inimigo);
-                Debug.Log($"Projetil lançado em direção ao núcleo! Dano potencial: {danoAtaqueDistancia}");
+                Debug.Log($"Projetil lanÃ§ado em direÃ§Ã£o ao nÃºcleo! Dano potencial: {danoAtaqueDistancia}");
             }
             else
             {
-                Debug.LogError("Prefab do projetil não contém o componente Projetil!");
+                Debug.LogError("Prefab do projetil nÃ£o contÃ©m o componente Projetil!");
             }
             tempoUltimoAtaqueDistancia = Time.time;
         }
         else if (projetilPrefab == null)
         {
-            Debug.LogError("Prefab do projetil não está configurado no Inimigo!");
+            Debug.LogError("Prefab do projetil nÃ£o estÃ¡ configurado no Inimigo!");
         }
     }
 
@@ -156,7 +175,7 @@ public class Inimigo : MonoBehaviour
         // Criar o objeto pai da barra de vida
         healthBarObject = new GameObject("HealthBar");
         healthBarObject.transform.SetParent(transform);
-        healthBarObject.transform.localPosition = new Vector3(0, 1.2f, 0); // Ajuste a posição conforme necessário
+        healthBarObject.transform.localPosition = new Vector3(0, 1.2f, 0); // Ajuste a posiï¿½ï¿½o conforme necessï¿½rio
         healthBarObject.transform.localRotation = Quaternion.identity;
 
         // Criar o fundo da barra de vida
@@ -182,7 +201,7 @@ public class Inimigo : MonoBehaviour
     {
         if (healthBarFill != null)
         {
-            float percentualVida = ((float)vida / vidaMaxima)*2;
+            float percentualVida = ((float)vida / vidaMaxima) * 2;
             healthBarFill.localScale = new Vector3(percentualVida, 1f, 1f);
             healthBarFill.localPosition = new Vector3((percentualVida - 1) / 2, 0, 0);
 
@@ -191,13 +210,12 @@ public class Inimigo : MonoBehaviour
             renderer.material.color = Color.Lerp(Color.red, Color.green, percentualVida);
         }
     }
-
     public void ReceberDano(int dano)
     {
         if (temEscudo)
         {
             dano = Mathf.Max(1, dano / 2); // Reduz o dano pela metade se tiver escudo
-            temEscudo = false; // Remove o escudo após absorver um ataque
+            temEscudo = false; // Remove o escudo apÃ³s absorver um ataque
         }
 
         vida -= dano;
@@ -215,4 +233,21 @@ public class Inimigo : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    public void Congelar(float duracao)
+    {
+        if (tempoCongelado <= 0)
+        {
+            velocidadeOriginal = velocidade;
+        }
+        tempoCongelado = Mathf.Max(tempoCongelado, duracao);
+        velocidade = velocidadeOriginal * 0.5f;
+    }
+
+    public void Queimar(float duracao, int danoPorSegundo)
+    {
+        tempoQueimando = Mathf.Max(tempoQueimando, duracao);
+        danoQueimadura = danoPorSegundo;
+    }
 }
+

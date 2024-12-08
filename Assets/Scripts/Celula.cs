@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
+using System;
 
 public enum CellState { vazia, torre, nucleo }
 
@@ -16,10 +17,10 @@ public class Celula : MonoBehaviour
 
     private Color[] coresTorre = new Color[]
     {
-        new Color(0.05f, 0.86f, 0.76f), // Nível 0
-        new Color(0.13f, 0.59f, 0.95f), // Nível 1
-        new Color(0.54f, 0.17f, 0.89f), // Nível 2
-        new Color(1f, 0.84f, 0f)        // Nível 3
+        new Color(0.5f, 0.5f, 0.5f), // Basic
+        new Color(0.0f, 0.7f, 1.0f), // Gelo
+        new Color(1.0f, 0.4f, 0.0f), // Fogo
+        new Color(0.8f, 0.0f, 1.0f)  // Plasma
     };
 
     void Awake()
@@ -44,11 +45,11 @@ public class Celula : MonoBehaviour
         torreVisual.transform.SetParent(transform);
         torreVisual.transform.localPosition = Vector3.zero;
         SpriteRenderer spriteRenderer = torreVisual.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = CreateArrowSprite();
+        spriteRenderer.sprite = CreateBasicTowerSprite();
         torreVisual.SetActive(false);
     }
 
-    private Sprite CreateArrowSprite()
+    private Sprite CreateBasicTowerSprite()
     {
         Texture2D texture = new Texture2D(32, 32);
         for (int y = 0; y < 32; y++)
@@ -143,14 +144,15 @@ public class Celula : MonoBehaviour
                 Torre torre = GetComponent<Torre>();
                 if (torre != null)
                 {
-                    corBorda = coresTorre[torre.nivel];
+                    corBorda = coresTorre[(int)torre.tipo];
+                    torreVisual.SetActive(true);
+                    AtualizarVisualTorre(torre.tipo, torre.nivel);
                 }
                 else
                 {
                     corBorda = coresTorre[0];
+                    torreVisual.SetActive(false);
                 }
-                torreVisual.SetActive(true);
-                torreVisual.GetComponent<SpriteRenderer>().color = corBorda;
                 break;
             case CellState.nucleo:
                 if (!UnityEngine.ColorUtility.TryParseHtmlString("#2EA951", out corBorda))
@@ -203,21 +205,67 @@ public class Celula : MonoBehaviour
         }
     }
 
-    public void AtualizarVisualTorre(int nivel)
+    public void AtualizarVisualTorre(TorreType tipo, int nivel)
     {
         if (state == CellState.torre && torreVisual != null)
         {
             SpriteRenderer spriteRenderer = torreVisual.GetComponent<SpriteRenderer>();
-            spriteRenderer.color = coresTorre[Mathf.Clamp(nivel, 0, coresTorre.Length - 1)];
+            spriteRenderer.sprite = CreateTowerSprite(tipo);
+            spriteRenderer.color = coresTorre[(int)tipo];
 
             // Aumentar o tamanho da torre com base no nível
             float escala = 1f + (nivel * 0.1f);
             torreVisual.transform.localScale = new Vector3(escala, escala, 1f);
 
             // Atualizar a borda
-            borderRenderer.startColor = coresTorre[Mathf.Clamp(nivel, 0, coresTorre.Length - 1)];
-            borderRenderer.endColor = coresTorre[Mathf.Clamp(nivel, 0, coresTorre.Length - 1)];
+            borderRenderer.startColor = coresTorre[(int)tipo];
+            borderRenderer.endColor = coresTorre[(int)tipo];
         }
+    }
+
+    private Sprite CreateTowerSprite(TorreType tipo)
+    {
+        Texture2D texture = new Texture2D(32, 32);
+        Color cor = Color.white;
+
+        for (int y = 0; y < 32; y++)
+        {
+            for (int x = 0; x < 32; x++)
+            {
+                switch (tipo)
+                {
+                    case TorreType.Basic:
+                        if (y > x * 0.8f && y < 32 - x * 0.8f && x < 24)
+                        {
+                            texture.SetPixel(x, y, cor);
+                        }
+                        break;
+                    case TorreType.Gelo:
+                        if ((x - 16) * (x - 16) + (y - 16) * (y - 16) <= 12 * 12)
+                        {
+                            texture.SetPixel(x, y, cor);
+                        }
+                        break;
+                    case TorreType.Fogo:
+                        if (x >= 8 && x < 24 && y >= 16 - Math.Abs(x - 16) && y <= 16 + Math.Abs(x - 16))
+                        {
+                            texture.SetPixel(x, y, cor);
+                        }
+                        break;
+                    case TorreType.Plasma:
+                        if ((x - 16) * (x - 16) + (y - 16) * (y - 16) <= 12 * 12 &&
+                            ((x - 16) * (x - 16) + (y - 16) * (y - 16) > 8 * 8 ||
+                             (x >= 14 && x <= 18) || (y >= 14 && y <= 18)))
+                        {
+                            texture.SetPixel(x, y, cor);
+                        }
+                        break;
+                }
+            }
+        }
+
+        texture.Apply();
+        return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f));
     }
 }
 

@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public enum ProjetilTipo { Torre, Inimigo }
+public enum ProjetilTipo { Basic, Gelo, Fogo, Plasma, Inimigo }
 
 public class Projetil : MonoBehaviour
 {
@@ -12,7 +10,6 @@ public class Projetil : MonoBehaviour
     private bool semAlvo = false;
     private Vector3 direcaoAtual;
     public ProjetilTipo tipo;
-
 
     private void Start()
     {
@@ -39,39 +36,50 @@ public class Projetil : MonoBehaviour
         Renderer rend = GetComponent<Renderer>();
         if (rend != null)
         {
-            TrailRenderer trail;
-            if (gameObject.GetComponent<TrailRenderer>() == null)
+            TrailRenderer trail = GetComponent<TrailRenderer>();
+            if (trail == null)
             {
                 trail = gameObject.AddComponent<TrailRenderer>();
             }
-            else
-            {
-                trail = gameObject.GetComponent<TrailRenderer>();
-            }
+
             switch (tipo)
             {
-                case ProjetilTipo.Torre:
-                    rend.material.color = Color.blue;
-                    transform.localScale = new Vector3(1.3f, 1.3f, 1.3f);
-                    trail.startWidth = 0.1f;
-                    trail.endWidth = 0.05f;
-                    trail.time = 0.5f;
-                    trail.material = new Material(Shader.Find("Sprites/Default"));
-                    trail.startColor = Color.blue;
-                    trail.endColor = new Color(0, 0, 1, 0); // Vermelho transparente
+                case ProjetilTipo.Basic:
+                    rend.material.color = Color.white;
+                    transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+                    trail.startColor = Color.white;
+                    trail.endColor = new Color(1, 1, 1, 0);
+                    break;
+                case ProjetilTipo.Gelo:
+                    rend.material.color = Color.cyan;
+                    transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+                    trail.startColor = Color.cyan;
+                    trail.endColor = new Color(0, 1, 1, 0);
+                    break;
+                case ProjetilTipo.Fogo:
+                    rend.material.color = Color.red;
+                    transform.localScale = new Vector3(0.3f, 0.5f, 0.3f);
+                    trail.startColor = Color.red;
+                    trail.endColor = new Color(1, 0.5f, 0, 0);
+                    break;
+                case ProjetilTipo.Plasma:
+                    rend.material.color = Color.magenta;
+                    transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+                    trail.startColor = Color.magenta;
+                    trail.endColor = new Color(1, 0, 1, 0);
                     break;
                 case ProjetilTipo.Inimigo:
-                    rend.material.color = Color.red;
-                    transform.localScale = new Vector3(1.2f, 1.5f, 1.5f); // Forma mais alongada
-                    trail = gameObject.AddComponent<TrailRenderer>();
-                    trail.startWidth = 0.1f;
-                    trail.endWidth = 0.05f;
-                    trail.time = 0.5f;
-                    trail.material = new Material(Shader.Find("Sprites/Default"));
-                    trail.startColor = Color.red;
-                    trail.endColor = new Color(1, 0, 0, 0); // Vermelho transparente
+                    rend.material.color = Color.yellow;
+                    transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+                    trail.startColor = Color.yellow;
+                    trail.endColor = new Color(1, 1, 0, 0);
                     break;
             }
+
+            trail.startWidth = 0.1f;
+            trail.endWidth = 0.05f;
+            trail.time = 0.5f;
+            trail.material = new Material(Shader.Find("Sprites/Default"));
         }
     }
 
@@ -102,22 +110,46 @@ public class Projetil : MonoBehaviour
 
     void AlvoAtingido()
     {
-        switch (tipo)
+        if (tipo == ProjetilTipo.Inimigo)
         {
-            case ProjetilTipo.Torre:
-                Inimigo inimigo = alvo.GetComponent<Inimigo>();
-                if (inimigo != null)
+            Nucleo nucleo = alvo.GetComponent<Nucleo>();
+            if (nucleo != null)
+            {
+                nucleo.ReceberDano(dano);
+            }
+        }
+        else
+        {
+            Inimigo inimigo = alvo.GetComponent<Inimigo>();
+            if (inimigo != null)
+            {
+                switch (tipo)
                 {
-                    inimigo.ReceberDano(dano);
+                    case ProjetilTipo.Basic:
+                        inimigo.ReceberDano(dano);
+                        break;
+                    case ProjetilTipo.Gelo:
+                        inimigo.ReceberDano(dano);
+                        inimigo.Congelar(2f);
+                        break;
+                    case ProjetilTipo.Fogo:
+                        inimigo.ReceberDano(dano);
+                        inimigo.Queimar(3f, dano / 2);
+                        break;
+                    case ProjetilTipo.Plasma:
+                        inimigo.ReceberDano(dano);
+                        Collider2D[] inimigosProximos = Physics2D.OverlapCircleAll(transform.position, 2f);
+                        foreach (Collider2D col in inimigosProximos)
+                        {
+                            Inimigo inimigoProximo = col.GetComponent<Inimigo>();
+                            if (inimigoProximo != null && inimigoProximo != inimigo)
+                            {
+                                inimigoProximo.ReceberDano(dano / 2);
+                            }
+                        }
+                        break;
                 }
-                break;
-            case ProjetilTipo.Inimigo:
-                Nucleo nucleo = alvo.GetComponent<Nucleo>();
-                if (nucleo != null)
-                {
-                    nucleo.ReceberDano(dano);
-                }
-                break;
+            }
         }
         Destroy(gameObject);
     }
@@ -127,3 +159,4 @@ public class Projetil : MonoBehaviour
         Destroy(gameObject);
     }
 }
+

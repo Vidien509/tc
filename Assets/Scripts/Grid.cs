@@ -160,4 +160,24 @@ public class Grid : MonoBehaviour
             }
         }
     }
+
+    public void SetInteractive(bool interactive)
+    {
+        for (int x = 0; x < gridArray.GetLength(0); x++)
+        {
+            for (int y = 0; y < gridArray.GetLength(1); y++)
+            {
+                Celula celula = gridArray[x, y];
+                if (celula != null)
+                {
+                    Collider2D collider = celula.GetComponent<Collider2D>();
+                    if (collider != null)
+                    {
+                        collider.enabled = interactive;
+                    }
+                }
+            }
+        }
+    }
 }
+
