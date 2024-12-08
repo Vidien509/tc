@@ -424,7 +424,7 @@ public class GameController : MonoBehaviour
                     RectTransform arrowRect = arrowObj.GetComponent<RectTransform>();
                     arrowRect.anchorMin = new Vector2(1, 0.5f);
                     arrowRect.anchorMax = new Vector2(1, 0.5f);
-                    arrowRect.anchoredPosition = new Vector2(-15, 0);
+                    arrowRect.anchoredPosition = new Vector2(-45, 0);
                     arrowRect.sizeDelta = new Vector2(20, 20);
                     arrow = arrowObj.transform;
                 }
