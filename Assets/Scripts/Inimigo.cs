@@ -15,7 +15,7 @@ public class Inimigo : MonoBehaviour
     private Vector3 alvoAtual;
     private bool chegouNoNucleo = false;
     private Nucleo nucleoAlvo;
-    private int vidaBase = 30;
+    private int vidaBase;
     private int vidaMaxima;
     private int vida;
     private int fase;
@@ -37,6 +37,7 @@ public class Inimigo : MonoBehaviour
 
     private void Start()
     {
+        vidaBase = 20;
         intervaloAtaqueDistancia = 5f;
         if (projetilPrefab == null)
         {
@@ -94,7 +95,7 @@ public class Inimigo : MonoBehaviour
         }
 
         // Ataque à distância
-        if (fase >= 5 && Time.time - tempoUltimoAtaqueDistancia > intervaloAtaqueDistancia)
+        if (fase >= 14 && Time.time - tempoUltimoAtaqueDistancia > intervaloAtaqueDistancia)
         {
             AtaqueDistancia();
         }

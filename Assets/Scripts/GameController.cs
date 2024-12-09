@@ -16,8 +16,8 @@ public class GameController : MonoBehaviour
     private bool escudoSelecionado = false;
 
     private CellState stateMenuSelecionado = CellState.torre;
-    private int precoTorre = 10;
-    private int precoUpgrade = 5;
+    private int precoTorre;
+    private int precoUpgrade;
 
     public GameObject textoPopup;
     private int _recurso;
@@ -37,8 +37,13 @@ public class GameController : MonoBehaviour
     private Torre torreAtual;
     private bool menuAberto = false;
 
+    private GameObject menuUpgradeNucleo;
+    private Nucleo nucleoAtual;
+
     private void Start()
     {
+        precoTorre = 10;
+        precoUpgrade = 15;
         recurso = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
@@ -57,6 +62,7 @@ public class GameController : MonoBehaviour
         corOriginal = botaoEscudo.colors;
 
         CriarMenuUpgrade();
+        CriarMenuUpgradeNucleo();
     }
 
     private void CriarMenuUpgrade()
@@ -94,13 +100,12 @@ public class GameController : MonoBehaviour
 
         float buttonWidth = 160f;
         float buttonHeight = 30f;
-        float spacing = 10f;
 
         CriarBotaoUpgrade("Gelo", new Vector2(0, 45), TorreType.Gelo, buttonWidth, buttonHeight, new Color(0, 0.7f, 1));
         CriarBotaoUpgrade("Fogo", new Vector2(0, 0), TorreType.Fogo, buttonWidth, buttonHeight, new Color(1, 0.4f, 0));
         CriarBotaoUpgrade("Plasma", new Vector2(0, -45), TorreType.Plasma, buttonWidth, buttonHeight, new Color(0.8f, 0, 1));
 
-        CriarBotaoVender(new Vector2(0, -90), buttonWidth, buttonHeight);
+        CriarBotaoVender(new Vector2(0, -95), buttonWidth, buttonHeight);
 
         menuUpgrade.SetActive(false);
 
@@ -111,6 +116,8 @@ public class GameController : MonoBehaviour
 
     private void CriarBotaoUpgrade(string texto, Vector2 posicao, TorreType tipo, float largura, float altura, Color cor)
     {
+        Color corBack = new Color(0f, 0f, 0f, 140f / 255f);
+
         GameObject botao = new GameObject("Upgrade" + tipo.ToString());
         botao.transform.SetParent(menuUpgrade.transform.Find("MenuContent"), false);
         RectTransform rectTransform = botao.AddComponent<RectTransform>();
@@ -120,15 +127,15 @@ public class GameController : MonoBehaviour
         rectTransform.sizeDelta = new Vector2(largura, altura);
 
         Image imagem = botao.AddComponent<Image>();
-        imagem.color = cor;
+        imagem.color = corBack;
 
         Button button = botao.AddComponent<Button>();
         button.onClick.AddListener(() => { UpgradeTorre(tipo); });
 
         ColorBlock cores = button.colors;
-        cores.normalColor = cor;
-        cores.highlightedColor = new Color(cor.r * 1.2f, cor.g * 1.2f, cor.b * 1.2f);
-        cores.pressedColor = new Color(cor.r * 0.8f, cor.g * 0.8f, cor.b * 0.8f);
+        cores.normalColor = corBack;
+        cores.highlightedColor = new Color(corBack.r * 1.2f, corBack.g * 1.2f, corBack.b * 1.2f);
+        cores.pressedColor = new Color(corBack.r * 0.8f, corBack.g * 0.8f, corBack.b * 0.8f);
         button.colors = cores;
 
         GameObject textObj = new GameObject("Text");
@@ -141,7 +148,7 @@ public class GameController : MonoBehaviour
 
         TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
         textComponent.text = texto;
-        textComponent.color = Color.white;
+        textComponent.color = cor;
         textComponent.fontSize = 14;
         textComponent.alignment = TextAlignmentOptions.Left;
 
@@ -154,7 +161,7 @@ public class GameController : MonoBehaviour
         priceRectTransform.offsetMax = new Vector2(-5, 0);
 
         TextMeshProUGUI priceComponent = priceObj.AddComponent<TextMeshProUGUI>();
-        priceComponent.color = Color.white;
+        priceComponent.color = cor;
         priceComponent.fontSize = 12;
         priceComponent.alignment = TextAlignmentOptions.Right;
     }
@@ -193,7 +200,7 @@ public class GameController : MonoBehaviour
         TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
         textComponent.text = "Vender";
         textComponent.color = Color.white;
-        textComponent.fontSize = 10;
+        textComponent.fontSize = 14;
         textComponent.alignment = TextAlignmentOptions.Center;
     }
 
@@ -235,6 +242,10 @@ public class GameController : MonoBehaviour
                     {
                         AbrirMenuUpgrade(cel);
                     }
+                    else if (cel.GetCellState() == CellState.nucleo)
+                    {
+                        AbrirMenuUpgradeNucleo(cel);
+                    }
                 }
             }
         }
@@ -242,6 +253,7 @@ public class GameController : MonoBehaviour
         if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
         {
             FecharMenu();
+            FecharMenuNucleo();
         }
     }
 
@@ -299,7 +311,7 @@ public class GameController : MonoBehaviour
     {
         if (torreAtual != null)
         {
-            int custoUpgrade = precoUpgrade * (torreAtual.nivel + 1);
+            int custoUpgrade = precoUpgrade * (torreAtual.nivel + 2);
             if (recurso >= custoUpgrade)
             {
                 recurso -= custoUpgrade;
@@ -409,7 +421,7 @@ public class GameController : MonoBehaviour
                 Button button = child.GetComponent<Button>();
                 TorreType tipo = (TorreType)System.Enum.Parse(typeof(TorreType), child.name.Substring(7));
                 bool isCurrentType = torreAtual.tipo == tipo;
-                bool canUpgrade = torreAtual.nivel < 3;
+                bool canUpgrade = torreAtual.nivel < 4;
 
                 button.interactable = (isCurrentType && canUpgrade) || (!isCurrentType && torreAtual.tipo == TorreType.Basic);
 
@@ -433,12 +445,14 @@ public class GameController : MonoBehaviour
 
                 // Atualizar o texto do preço
                 TextMeshProUGUI priceText = child.Find("PriceText").GetComponent<TextMeshProUGUI>();
-                int custoUpgrade = precoUpgrade * (torreAtual.nivel + 1);
+                int custoUpgrade = precoUpgrade * (torreAtual.nivel + 2);
 
                 if ((isCurrentType && canUpgrade) || (!isCurrentType && torreAtual.tipo == TorreType.Basic))
                 {
                     priceText.text = $"$ {custoUpgrade}";
                     priceText.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
+                    RectTransform priceRect = priceText.GetComponent<RectTransform>();
+                    priceRect.anchoredPosition = new Vector2(-35, 0);
                 }
                 else
                 {
@@ -449,8 +463,215 @@ public class GameController : MonoBehaviour
                 {
                     Image arrowImage = arrow.GetComponent<Image>();
                     arrowImage.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
+                }else if (isCurrentType && !canUpgrade)
+                {
+                    priceText.text = "MAX";
                 }
             }
+        }
+    }
+
+
+    private void CriarMenuUpgradeNucleo()
+    {
+        menuUpgradeNucleo = new GameObject("MenuUpgradeNucleo");
+        menuUpgradeNucleo.transform.SetParent(transform);
+        Canvas canvas = menuUpgradeNucleo.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;
+
+        CanvasScaler scaler = menuUpgradeNucleo.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+
+        GraphicRaycaster raycaster = menuUpgradeNucleo.AddComponent<GraphicRaycaster>();
+
+        RectTransform rectTransform = menuUpgradeNucleo.GetComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0, 0);
+        rectTransform.anchorMax = new Vector2(1, 1);
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+
+        Image background = menuUpgradeNucleo.AddComponent<Image>();
+        background.color = new Color(0, 0, 0, 0.5f);
+
+        GameObject menuContent = new GameObject("MenuContent");
+        menuContent.transform.SetParent(menuUpgradeNucleo.transform, false);
+        RectTransform contentRect = menuContent.AddComponent<RectTransform>();
+        contentRect.anchorMin = new Vector2(0.5f, 0.5f);
+        contentRect.anchorMax = new Vector2(0.5f, 0.5f);
+        contentRect.sizeDelta = new Vector2(200, 150);
+
+        Image contentBackground = menuContent.AddComponent<Image>();
+        contentBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+
+        float buttonWidth = 160f;
+        float buttonHeight = 30f;
+
+        CriarBotaoUpgradeNucleo("Vida Máxima", new Vector2(0, 45), buttonWidth, buttonHeight, Color.green);
+        CriarBotaoUpgradeNucleo("Regeneração", new Vector2(0, 0), buttonWidth, buttonHeight, Color.yellow);
+        CriarBotaoUpgradeNucleo("Escudo", new Vector2(0, -45), buttonWidth, buttonHeight, Color.blue);
+
+        menuUpgradeNucleo.SetActive(false);
+
+        Button backgroundButton = background.gameObject.AddComponent<Button>();
+        backgroundButton.onClick.AddListener(FecharMenuNucleo);
+    }
+
+    private void CriarBotaoUpgradeNucleo(string texto, Vector2 posicao, float largura, float altura, Color cor)
+    {
+        Color corBack = new Color(0f, 0f, 0f, 140f / 255f);
+        GameObject botao = new GameObject("Upgrade" + texto);
+        botao.transform.SetParent(menuUpgradeNucleo.transform.Find("MenuContent"), false);
+        RectTransform rectTransform = botao.AddComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = posicao;
+        rectTransform.sizeDelta = new Vector2(largura, altura);
+
+        Image imagem = botao.AddComponent<Image>();
+        imagem.color = corBack;
+
+        Button button = botao.AddComponent<Button>();
+        button.onClick.AddListener(() => { UpgradeNucleo(texto); });
+
+        ColorBlock cores = button.colors;
+        cores.normalColor = corBack;
+        cores.highlightedColor = new Color(corBack.r * 1.2f, corBack.g * 1.2f, corBack.b * 1.2f);
+        cores.pressedColor = new Color(corBack.r * 0.8f, corBack.g * 0.8f, corBack.b * 0.8f);
+        button.colors = cores;
+
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(botao.transform, false);
+        RectTransform textRectTransform = textObj.AddComponent<RectTransform>();
+        textRectTransform.anchorMin = new Vector2(0, 0);
+        textRectTransform.anchorMax = new Vector2(1, 1);
+        textRectTransform.offsetMin = new Vector2(5, 0);
+        textRectTransform.offsetMax = new Vector2(-25, 0);
+
+        TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
+        textComponent.text = texto;
+        textComponent.color = cor;
+        textComponent.fontSize = 14;
+        textComponent.alignment = TextAlignmentOptions.Left;
+
+        GameObject priceObj = new GameObject("PriceText");
+        priceObj.transform.SetParent(botao.transform, false);
+        RectTransform priceRectTransform = priceObj.AddComponent<RectTransform>();
+        priceRectTransform.anchorMin = new Vector2(1, 0);
+        priceRectTransform.anchorMax = new Vector2(1, 1);
+        priceRectTransform.offsetMin = new Vector2(-60, 0);
+        priceRectTransform.offsetMax = new Vector2(-5, 0);
+
+        TextMeshProUGUI priceComponent = priceObj.AddComponent<TextMeshProUGUI>();
+        priceComponent.color = cor;
+        priceComponent.fontSize = 12;
+        priceComponent.alignment = TextAlignmentOptions.Right;
+    }
+
+    private void AbrirMenuUpgradeNucleo(Celula cel)
+    {
+        nucleoAtual = cel.GetComponent<Nucleo>();
+        if (nucleoAtual != null)
+        {
+            menuUpgradeNucleo.SetActive(true);
+            Vector3 posicaoMundo = cel.transform.position + new Vector3(0, 1f, 0);
+            Vector3 posicaoTela = Camera.main.WorldToScreenPoint(posicaoMundo);
+            menuUpgradeNucleo.transform.Find("MenuContent").position = posicaoTela;
+            menuAberto = true;
+            AtualizarBotoesUpgradeNucleo();
+        }
+    }
+
+    private void UpgradeNucleo(string tipoUpgrade)
+    {
+        if (nucleoAtual != null)
+        {
+            int custoUpgrade = 20 * (nucleoAtual.nivel);
+            if (recurso >= custoUpgrade)
+            {
+                recurso -= custoUpgrade;
+                switch (tipoUpgrade)
+                {
+                    case "Vida Máxima":
+                        nucleoAtual.UpgradeVidaMaxima();
+                        break;
+                    case "Regeneração":
+                        nucleoAtual.UpgradeRegeneracao();
+                        break;
+                    case "Escudo":
+                        nucleoAtual.UpgradeEscudo();
+                        break;
+                }
+                GameObject textoPopupI = Instantiate(textoPopup, nucleoAtual.transform.position, Quaternion.identity);
+                TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
+                text.color = Color.yellow;
+                text.text = "Upgrade Núcleo! - $ " + custoUpgrade;
+                atualizaTextRecursos();
+                AtualizarBotoesUpgradeNucleo();
+            }
+            else
+            {
+                MostrarMensagemRecursosInsuficientes(custoUpgrade);
+            }
+        }
+    }
+
+    private void FecharMenuNucleo()
+    {
+        menuUpgradeNucleo.SetActive(false);
+        menuAberto = false;
+        nucleoAtual = null;
+    }
+
+    private void AtualizarBotoesUpgradeNucleo()
+    {
+        foreach (Transform child in menuUpgradeNucleo.transform.Find("MenuContent"))
+        {
+            if (child.name.StartsWith("Upgrade"))
+            {
+                Button button = child.GetComponent<Button>();
+                string tipoUpgrade = child.name.Substring(7);
+                int custoUpgrade = 20 * (nucleoAtual.nivel);
+
+                TextMeshProUGUI priceText = child.Find("PriceText").GetComponent<TextMeshProUGUI>();
+                priceText.text = $"$ {custoUpgrade}";
+                priceText.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
+                RectTransform priceRect = priceText.GetComponent<RectTransform>();
+                priceRect.anchoredPosition = new Vector2(-35, 0);
+
+                Transform arrow = child.Find("Arrow");
+                if (arrow == null)
+                {
+                    GameObject arrowObj = new GameObject("Arrow");
+                    arrowObj.transform.SetParent(child, false);
+                    Image arrowImage = arrowObj.AddComponent<Image>();
+                    arrowImage.sprite = Resources.Load<Sprite>("UI/arrow_icon"); // Certifique-se de ter este ícone
+                    RectTransform arrowRect = arrowObj.GetComponent<RectTransform>();
+                    arrowRect.anchorMin = new Vector2(1, 0.5f);
+                    arrowRect.anchorMax = new Vector2(1, 0.5f);
+                    arrowRect.anchoredPosition = new Vector2(-45, 0);
+                    arrowRect.sizeDelta = new Vector2(20, 20);
+                    arrow = arrowObj.transform;
+
+                    arrowImage.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
+                }
+                else
+                {
+                    Image arrowImage = arrow.GetComponent<Image>();
+                    arrowImage.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
+                }
+            }
+        }
+    }
+
+    public void AvancarFase()
+    {
+        // Chame este método quando a fase avançar
+        Nucleo[] nucleos = FindObjectsOfType<Nucleo>();
+        foreach (Nucleo nucleo in nucleos)
+        {
+            nucleo.AvancarFase();
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 
 public enum TorreType { Basic, Gelo, Fogo, Plasma }
 
@@ -32,6 +33,16 @@ public class Torre : MonoBehaviour
     {
         AtualizarAtributos();
         StartCoroutine(AtaqueContinuo());
+
+        GameObject textoNivelObj = new GameObject("TextoNivel");
+        textoNivelObj.transform.SetParent(transform);
+        textoNivelObj.transform.localPosition = new Vector3(0.4f, 0.4f, -0.1f);
+        TextMeshPro textoNivel = textoNivelObj.AddComponent<TextMeshPro>();
+        textoNivel.alignment = TextAlignmentOptions.TopRight;
+        textoNivel.fontSize = 3;
+        textoNivel.color = Color.white;
+
+        AtualizarTextoNivel();
     }
 
     void Update()
@@ -47,18 +58,20 @@ public class Torre : MonoBehaviour
     public void SetTorreType(TorreType novoTipo)
     {
         tipo = novoTipo;
-        nivel = 0;
+        nivel = 1;
         AtualizarAtributos();
         celula.AtualizarVisualTorre(tipo, nivel);
+        AtualizarTextoNivel();
     }
 
     public void Upgrade()
     {
-        if (nivel < 3)
+        if (nivel < 4)
         {
             nivel++;
             AtualizarAtributos();
             celula.AtualizarVisualTorre(tipo, nivel);
+            AtualizarTextoNivel();
         }
     }
 
@@ -165,6 +178,13 @@ public class Torre : MonoBehaviour
             default:
                 return ProjetilTipo.Basic;
         }
+    }
+
+    private void AtualizarTextoNivel()
+    {
+        string nivelTexto = new string('I', nivel + 1);
+        TextMeshPro textoNivel = transform.Find("TextoNivel").GetComponent<TextMeshPro>();
+        textoNivel.text = nivelTexto;
     }
 }
 

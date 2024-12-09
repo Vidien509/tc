@@ -1,8 +1,9 @@
 using CodeMonkey.Utils;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
+using static System.Net.Mime.MediaTypeNames;
 
 public class GameLoop : MonoBehaviour
 {
@@ -20,12 +21,15 @@ public class GameLoop : MonoBehaviour
     public GameObject menuQuestao;
     public GameObject tituloQuestao;
     public GameObject textoQuestao;
+    public GameObject nivelQuestao;
 
     public GameObject textoPopup;
     public GameController gameController;
 
     public TextMeshProUGUI textFase;
     public TextMeshProUGUI textTempoJogo;
+
+    public TextMeshProUGUI textRespCorreta;
 
     private int _fase;
     public int fase
@@ -71,13 +75,13 @@ public class GameLoop : MonoBehaviour
                 // Finaliza a fase de responder perguntas
                 faseRespondendo = false;
                 tempoCiclo = 0f;
-                spawner.StartSpawner(fase*5, periodoCiclo);
+                spawner.StartSpawner(fase*10, periodoCiclo);
                 menuQuestao.SetActive(false);
             }
             else if (verificarResposta(inputField.text))
             {
                 // Gera nova questão ao responder corretamente
-                processarRespostaCorreta();
+                processarRespostaCorreta(tempoQuestao);
                 iniciarNovaQuestao();
             }
         }
@@ -111,26 +115,80 @@ public class GameLoop : MonoBehaviour
         tempoQuestao = 0.0f;
     }
 
-    private void processarRespostaCorreta()
+    private void processarRespostaCorreta(float tempoQuestao)
     {
         questao = "Quanto é ";
-        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+        GameObject textoPopupI = Instantiate(textoPopup, new Vector3(0, -50, 0), Quaternion.identity);
         TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
         text.color = Color.green;
-        text.text = "+ $ 10";
-        gameController.recurso += 10;
+        text.fontSize = 42;
+
+        if (tempoQuestao <= 1.5f)
+        {
+
+            GameObject textoPopupRC = Instantiate(textoPopup, new Vector3(0,0,0), Quaternion.identity);
+            TextMeshPro textRC = textoPopupRC.GetComponent<TextMeshPro>();
+            TextoPopup textoPopupScript = textoPopupRC.GetComponent<TextoPopup>();
+            textoPopupScript.Configure(true, false, false, 1f, 3f);
+            textRC.fontSize = 42;
+            textRC.text = "PERFEITO!  2X";
+
+            text.color = Color.green;
+            text.text = "+ $ 20";
+            gameController.recurso += 20;
+        }
+        else if (tempoQuestao <= 3.5f)
+        {
+            GameObject textoPopupRC = Instantiate(textoPopup, new Vector3(0, 0, 0), Quaternion.identity);
+            TextMeshPro textRC = textoPopupRC.GetComponent<TextMeshPro>();
+            TextoPopup textoPopupScript = textoPopupRC.GetComponent<TextoPopup>();
+            textoPopupScript.Configure(false, true, false, 1f, 3f);
+            textRC.fontSize = 42;
+            textRC.text = "EXCELENTE!  1.5X";
+
+            text.color = Color.green;
+            text.text = "+ $ 15";
+            gameController.recurso += 15;
+        }
+        else if (tempoQuestao > 3.5f)
+        {
+            GameObject textoPopupRC = Instantiate(textoPopup, new Vector3(0, 0, 0), Quaternion.identity);
+            TextMeshPro textRC = textoPopupRC.GetComponent<TextMeshPro>();
+            TextoPopup textoPopupScript = textoPopupRC.GetComponent<TextoPopup>();
+            textoPopupScript.Configure(false, false, true, 1f, 3f);
+            textRC.fontSize = 42;
+            textRC.text = "CORRETO!";
+
+            text.color = Color.green;
+            text.text = "+ $ 10";
+            gameController.recurso += 10;
+        }    
     }
 
     public void gerarQuestao()
     {
+        UnityEngine.UI.Image painelNivelQ = nivelQuestao.GetComponent<UnityEngine.UI.Image>();
         valor1 = Random.Range(1, 10);
         valor2 = Random.Range(1, 10);
         valorSinal = Random.Range(0, 4);
         sinal = listaSinal[valorSinal];
+        
         if (sinal == " / ")
         {
+            painelNivelQ.color = Color.yellow;
             int multiplicador = Random.Range(1, 10);
             valor1 = valor2 * multiplicador;
+        }else if (sinal == " - ")
+        {
+            painelNivelQ.color = Color.blue;
+            valor1 = Random.Range(valor2, 10);
+        }else if(sinal ==  " + ")
+        {
+            painelNivelQ.color = Color.red;
+        }
+        else if (sinal == " x ")
+        {
+            painelNivelQ.color = Color.green;
         }
         questao = "Quanto é " + valor1 + sinal + valor2 + "?";
         calcularResposta();
@@ -176,4 +234,5 @@ public class GameLoop : MonoBehaviour
     {
         textTempoJogo.text = tempoCiclo.ToString("F2");
     }
+
 }

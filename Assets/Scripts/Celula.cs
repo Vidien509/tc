@@ -128,6 +128,7 @@ public class Celula : MonoBehaviour
         if (value != "0")
         {
             texto.text = value;
+            texto.alignment = TextAlignmentOptions.Center; // Centraliza o texto
         }
         else
         {
