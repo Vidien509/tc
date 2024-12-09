@@ -127,7 +127,18 @@ public class Celula : MonoBehaviour
 
         if (value != "0")
         {
-            texto.text = value;
+            if (state == CellState.nucleo)
+            {
+                Nucleo nucleo = GetComponent<Nucleo>();
+                if (nucleo != null)
+                {
+                    texto.text = $"{nucleo.vida}/{nucleo.vidaMaxima}";
+                }
+            }
+            else
+            {
+                texto.text = value;
+            }
             texto.alignment = TextAlignmentOptions.Center; // Centraliza o texto
         }
         else
@@ -267,6 +278,28 @@ public class Celula : MonoBehaviour
 
         texture.Apply();
         return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f));
+    }
+
+
+    public void HighlightCell()
+    {
+        // Store the current text
+        string currentText = transform.GetChild(0).GetComponent<TextMeshPro>().text;
+
+        // Clear the text temporarily
+        transform.GetChild(0).GetComponent<TextMeshPro>().text = "";
+
+        // Store this information to use when unhighlighting
+        transform.GetChild(0).GetComponent<TextMeshPro>().SetText(currentText);
+    }
+
+    public void UnhighlightCell()
+    {
+        // Restore the text
+        transform.GetChild(0).GetComponent<TextMeshPro>().text = transform.GetChild(0).GetComponent<TextMeshPro>().text;
+
+        // Update visuals
+        UpdateCellVisuals();
     }
 }
 

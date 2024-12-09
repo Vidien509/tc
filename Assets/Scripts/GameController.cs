@@ -16,8 +16,8 @@ public class GameController : MonoBehaviour
     private bool escudoSelecionado = false;
 
     private CellState stateMenuSelecionado = CellState.torre;
-    private int precoTorre;
-    private int precoUpgrade;
+    private int precoTorre = 10;
+    private int precoUpgrade = 5;
 
     public GameObject textoPopup;
     private int _recurso;
@@ -42,8 +42,6 @@ public class GameController : MonoBehaviour
 
     private void Start()
     {
-        precoTorre = 10;
-        precoUpgrade = 15;
         recurso = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
@@ -500,17 +498,19 @@ public class GameController : MonoBehaviour
         RectTransform contentRect = menuContent.AddComponent<RectTransform>();
         contentRect.anchorMin = new Vector2(0.5f, 0.5f);
         contentRect.anchorMax = new Vector2(0.5f, 0.5f);
-        contentRect.sizeDelta = new Vector2(200, 150);
+        contentRect.sizeDelta = new Vector2(200, 220);
 
         Image contentBackground = menuContent.AddComponent<Image>();
         contentBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
 
         float buttonWidth = 160f;
         float buttonHeight = 30f;
+        float spacing = 10f;
 
         CriarBotaoUpgradeNucleo("Vida Máxima", new Vector2(0, 45), buttonWidth, buttonHeight, Color.green);
-        CriarBotaoUpgradeNucleo("Regeneração", new Vector2(0, 0), buttonWidth, buttonHeight, Color.yellow);
-        CriarBotaoUpgradeNucleo("Escudo", new Vector2(0, -45), buttonWidth, buttonHeight, Color.blue);
+        CriarBotaoUpgradeNucleo("Regeneração", new Vector2(0, 0), buttonWidth, buttonHeight, Color.blue);
+        CriarBotaoUpgradeNucleo("Escudo", new Vector2(0, -45), buttonWidth, buttonHeight, Color.yellow);
+        CriarBotaoUpgradeNucleo("Fortificação", new Vector2(0, -90), buttonWidth, buttonHeight, Color.cyan);
 
         menuUpgradeNucleo.SetActive(false);
 
@@ -602,11 +602,14 @@ public class GameController : MonoBehaviour
                     case "Escudo":
                         nucleoAtual.UpgradeEscudo();
                         break;
+                    case "Fortificação":
+                        nucleoAtual.UpgradeFortificacao();
+                        break;
                 }
                 GameObject textoPopupI = Instantiate(textoPopup, nucleoAtual.transform.position, Quaternion.identity);
                 TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
                 text.color = Color.yellow;
-                text.text = "Upgrade Núcleo! - $ " + custoUpgrade;
+                text.text = "Upgrade " + tipoUpgrade + "! - $ " + custoUpgrade;
                 atualizaTextRecursos();
                 AtualizarBotoesUpgradeNucleo();
             }
@@ -655,7 +658,7 @@ public class GameController : MonoBehaviour
                     arrow = arrowObj.transform;
 
                     arrowImage.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
-                }
+                }   
                 else
                 {
                     Image arrowImage = arrow.GetComponent<Image>();
