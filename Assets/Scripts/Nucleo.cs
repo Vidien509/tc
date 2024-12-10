@@ -257,7 +257,7 @@ public class Nucleo : MonoBehaviour
             Debug.LogWarning("Shield grid texture not found. Please create a texture named 'ShieldGrid' in a 'Resources/Textures' folder.");
         }
 
-        escudoRenderer.material.SetFloat("_GridScale", 100f); // Adjust this value to change the grid density
+        escudoRenderer.material.SetFloat("_GridScale", 10f); // Adjust this value to change the grid density
 
         AtualizarEscudoVisual();
 
