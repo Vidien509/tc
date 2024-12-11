@@ -17,7 +17,7 @@ public class GameController : MonoBehaviour
 
     private CellState stateMenuSelecionado = CellState.torre;
     private int precoTorre = 10;
-    private int precoUpgrade = 5;
+    private int precoUpgrade;
 
     public GameObject textoPopup;
     private int _recurso;
@@ -42,6 +42,7 @@ public class GameController : MonoBehaviour
 
     private void Start()
     {
+        precoUpgrade = 15;
         recurso = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
@@ -461,7 +462,8 @@ public class GameController : MonoBehaviour
                 {
                     Image arrowImage = arrow.GetComponent<Image>();
                     arrowImage.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
-                }else if (isCurrentType && !canUpgrade)
+                }
+                else if (isCurrentType && !canUpgrade)
                 {
                     priceText.text = "MAX";
                 }
@@ -505,7 +507,6 @@ public class GameController : MonoBehaviour
 
         float buttonWidth = 160f;
         float buttonHeight = 30f;
-        float spacing = 10f;
 
         CriarBotaoUpgradeNucleo("Vida Máxima", new Vector2(0, 45), buttonWidth, buttonHeight, Color.green);
         CriarBotaoUpgradeNucleo("Regeneração", new Vector2(0, 0), buttonWidth, buttonHeight, Color.blue);
@@ -587,7 +588,23 @@ public class GameController : MonoBehaviour
     {
         if (nucleoAtual != null)
         {
-            int custoUpgrade = 20 * (nucleoAtual.nivel);
+            int custoUpgrade = 0;
+            switch (tipoUpgrade)
+            {
+                case "Vida Máxima":
+                    custoUpgrade = nucleoAtual.GetPrecoUpgradeVidaMaxima();
+                    break;
+                case "Regeneração":
+                    custoUpgrade = nucleoAtual.GetPrecoUpgradeRegeneracao();
+                    break;
+                case "Escudo":
+                    custoUpgrade = nucleoAtual.GetPrecoUpgradeEscudo();
+                    break;
+                case "Fortificação":
+                    custoUpgrade = nucleoAtual.GetPrecoUpgradeFortificacao();
+                    break;
+            }
+
             if (recurso >= custoUpgrade)
             {
                 recurso -= custoUpgrade;
@@ -635,7 +652,23 @@ public class GameController : MonoBehaviour
             {
                 Button button = child.GetComponent<Button>();
                 string tipoUpgrade = child.name.Substring(7);
-                int custoUpgrade = 20 * (nucleoAtual.nivel);
+                int custoUpgrade = 0;
+
+                switch (tipoUpgrade)
+                {
+                    case "Vida Máxima":
+                        custoUpgrade = nucleoAtual.GetPrecoUpgradeVidaMaxima();
+                        break;
+                    case "Regeneração":
+                        custoUpgrade = nucleoAtual.GetPrecoUpgradeRegeneracao();
+                        break;
+                    case "Escudo":
+                        custoUpgrade = nucleoAtual.GetPrecoUpgradeEscudo();
+                        break;
+                    case "Fortificação":
+                        custoUpgrade = nucleoAtual.GetPrecoUpgradeFortificacao();
+                        break;
+                }
 
                 TextMeshProUGUI priceText = child.Find("PriceText").GetComponent<TextMeshProUGUI>();
                 priceText.text = $"$ {custoUpgrade}";
@@ -649,7 +682,7 @@ public class GameController : MonoBehaviour
                     GameObject arrowObj = new GameObject("Arrow");
                     arrowObj.transform.SetParent(child, false);
                     Image arrowImage = arrowObj.AddComponent<Image>();
-                    arrowImage.sprite = Resources.Load<Sprite>("UI/arrow_icon"); // Certifique-se de ter este ícone
+                    arrowImage.sprite = Resources.Load<Sprite>("UI/arrow_icon");
                     RectTransform arrowRect = arrowObj.GetComponent<RectTransform>();
                     arrowRect.anchorMin = new Vector2(1, 0.5f);
                     arrowRect.anchorMax = new Vector2(1, 0.5f);
@@ -658,7 +691,7 @@ public class GameController : MonoBehaviour
                     arrow = arrowObj.transform;
 
                     arrowImage.color = recurso >= custoUpgrade ? Color.green : Color.yellow;
-                }   
+                }
                 else
                 {
                     Image arrowImage = arrow.GetComponent<Image>();

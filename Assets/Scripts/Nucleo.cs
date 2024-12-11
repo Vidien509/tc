@@ -13,7 +13,7 @@ public class Nucleo : MonoBehaviour
         {
             int oldVida = _vida;
             _vida = Mathf.Min(value, vidaMaxima);
-            atualizaTextVida();
+            AtualizarTextoVida();
             if (_vida > oldVida)
             {
                 StartCoroutine(IndicarVida());
@@ -26,9 +26,11 @@ public class Nucleo : MonoBehaviour
     public int nivel;
 
     public Celula cel;
-    private TextMeshPro texto;
+    private TextMeshPro textoVida;
+    private TextMeshPro textoEscudo;
+    private TextMeshPro textoNivel;
 
-    // Novos atributos para upgrades
+    // Atributos para upgrades
     public int nivelVidaMaxima;
     public int nivelRegeneracao;
     public int nivelEscudo;
@@ -36,15 +38,19 @@ public class Nucleo : MonoBehaviour
     public float timerRegen;
 
     // Atributos para o escudo
-    private float escudoMaximo;
     private float escudoAtual;
-    private GameObject escudoVisual;
+
+    // Preços base para upgrades
+    private int precoBaseVidaMaxima = 35;
+    private int precoBaseRegeneracao = 25;
+    private int precoBaseEscudo = 15;
+    private int precoBaseFortificacao = 30;
 
     void Start()
     {
         timerRegen = 0f;
-        texto = transform.GetChild(0).GetComponent<TextMeshPro>();
-        texto.fontSize = 3.5f;
+        textoVida = transform.GetChild(0).GetComponent<TextMeshPro>();
+        textoVida.fontSize = 3.5f;
         cel = transform.GetComponent<Celula>();
         int aux;
         vidaMaxima = int.TryParse(cel.getValue(), out aux) ? aux : 100;
@@ -55,19 +61,14 @@ public class Nucleo : MonoBehaviour
         nivelRegeneracao = 0;
         nivelEscudo = 0;
         nivelFortificacao = 0;
-        escudoMaximo = 0f;
         escudoAtual = 0f;
 
-        GameObject textoNivelObj = new GameObject("TextoNivel");
-        textoNivelObj.transform.SetParent(transform);
-        textoNivelObj.transform.localPosition = new Vector3(0.4f, 0.4f, -0.1f);
-        TextMeshPro textoNivel = textoNivelObj.AddComponent<TextMeshPro>();
-        textoNivel.alignment = TextAlignmentOptions.TopRight;
-        textoNivel.fontSize = 3;
-        textoNivel.color = Color.white;
-
-        CriarEscudoVisual();
+        CriarTextoEscudo();
+        CriarTextoNivel();
+        AtualizarTextoVida();
+        AtualizarTextoEscudo();
         AtualizarTextoNivel();
+        AtualizarCorCelula();
     }
 
     void Update()
@@ -81,13 +82,6 @@ public class Nucleo : MonoBehaviour
                 vida += (int)(regeneracaoVida * 2);
                 timerRegen = 0;
             }
-        }
-
-        // Regeneração do escudo
-        if (escudoAtual < escudoMaximo)
-        {
-            escudoAtual += Time.deltaTime * (nivelEscudo * 0.5f);
-            AtualizarEscudoVisual();
         }
     }
 
@@ -108,7 +102,8 @@ public class Nucleo : MonoBehaviour
                 danoReduzido = Mathf.CeilToInt((danoAoEscudo - escudoAtual) / 2f);
                 escudoAtual = 0;
             }
-            AtualizarEscudoVisual();
+            AtualizarTextoEscudo();
+            AtualizarCorCelula();
         }
 
         if (danoReduzido > 0)
@@ -124,20 +119,30 @@ public class Nucleo : MonoBehaviour
                 StartCoroutine(IndicarDano());
             }
         }
-        atualizaTextVida();
+        AtualizarTextoVida();
     }
 
-    private void atualizaTextVida()
+    private void AtualizarTextoVida()
     {
         cel.setValue(vida.ToString());
-        int vidaTotal = vida + Mathf.CeilToInt(escudoAtual);
+        textoVida.text = $"{vida}/{vidaMaxima}";
+    }
+
+    private void AtualizarTextoEscudo()
+    {
+        textoEscudo.text = $"{Mathf.CeilToInt(escudoAtual)}";
+    }
+
+    private void AtualizarCorCelula()
+    {
+        SpriteRenderer renderer = GetComponent<SpriteRenderer>();
         if (escudoAtual > 0)
         {
-            texto.text = $"<color=blue>{vidaTotal}</color>/{vidaMaxima}";
+            renderer.color = Color.blue;
         }
         else
         {
-            texto.text = $"{vida}/{vidaMaxima}";
+            renderer.color = Color.white;
         }
     }
 
@@ -148,16 +153,14 @@ public class Nucleo : MonoBehaviour
 
     public void UpgradeVidaMaxima()
     {
-        nivel++;
         nivelVidaMaxima++;
         vidaMaxima += 50;
         AtualizarTextoNivel();
-        atualizaTextVida();
+        AtualizarTextoVida();
     }
 
     public void UpgradeRegeneracao()
     {
-        nivel++;
         nivelRegeneracao++;
         regeneracaoVida += 0.5f;
         AtualizarTextoNivel();
@@ -165,17 +168,15 @@ public class Nucleo : MonoBehaviour
 
     public void UpgradeEscudo()
     {
-        nivel++;
         nivelEscudo++;
-        escudoMaximo += 50f;
-        escudoAtual = escudoMaximo;
+        escudoAtual += 20 + nivelEscudo*5;
         AtualizarTextoNivel();
-        AtualizarEscudoVisual();
+        AtualizarTextoEscudo();
+        AtualizarCorCelula();
     }
 
     public void UpgradeFortificacao()
     {
-        nivel++;
         nivelFortificacao++;
         AtualizarTextoNivel();
     }
@@ -183,11 +184,11 @@ public class Nucleo : MonoBehaviour
     public void AvancarFase()
     {
         nivel++;
-        vidaMaxima += 25;
+        vidaMaxima += 10 + nivelEscudo * 5;
         regeneracaoVida += 0.1f;
         vida = vidaMaxima;
         AtualizarTextoNivel();
-        atualizaTextVida();
+        AtualizarTextoVida();
     }
 
     private IEnumerator IndicarDano()
@@ -228,60 +229,51 @@ public class Nucleo : MonoBehaviour
         renderer.color = originalColor;
     }
 
+    private void CriarTextoEscudo()
+    {
+        GameObject textoEscudoObj = new GameObject("TextoEscudo");
+        textoEscudoObj.transform.SetParent(transform);
+        textoEscudoObj.transform.localPosition = new Vector3(0, -0.3f, -0.1f);
+        textoEscudo = textoEscudoObj.AddComponent<TextMeshPro>();
+        textoEscudo.alignment = TextAlignmentOptions.Center;
+        textoEscudo.fontSize = 14f;
+        textoEscudo.color = Color.cyan;
+    }
+
+    private void CriarTextoNivel()
+    {
+        GameObject textoNivelObj = new GameObject("TextoNivel");
+        textoNivelObj.transform.SetParent(transform);
+        textoNivelObj.transform.localPosition = new Vector3(0.4f, 0.4f, -0.1f);
+        textoNivel = textoNivelObj.AddComponent<TextMeshPro>();
+        textoNivel.alignment = TextAlignmentOptions.TopRight;
+        textoNivel.fontSize = 3;
+        textoNivel.color = Color.white;
+    }
+
     private void AtualizarTextoNivel()
     {
-        string nivelTexto = new string('I', nivel);
-        TextMeshPro textoNivel = transform.Find("TextoNivel").GetComponent<TextMeshPro>();
-        textoNivel.text = nivelTexto;
+        textoNivel.text = $"N{nivel}";
     }
 
-    private void CriarEscudoVisual()
+    public int GetPrecoUpgradeVidaMaxima()
     {
-        escudoVisual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        escudoVisual.transform.SetParent(transform);
-        escudoVisual.transform.localPosition = Vector3.zero;
-        escudoVisual.transform.localScale = Vector3.one * 1.2f;
-
-        Renderer escudoRenderer = escudoVisual.GetComponent<Renderer>();
-        escudoRenderer.material = new Material(Shader.Find("Custom/ShieldEffect"));
-        escudoRenderer.material.renderQueue = 3000;
-
-        // Load and set the grid texture
-        Texture2D gridTexture = Resources.Load<Texture2D>("Textures/ShieldGrid");
-        if (gridTexture != null)
-        {
-            escudoRenderer.material.SetTexture("_GridTexture", gridTexture);
-        }
-        else
-        {
-            Debug.LogWarning("Shield grid texture not found. Please create a texture named 'ShieldGrid' in a 'Resources/Textures' folder.");
-        }
-
-        escudoRenderer.material.SetFloat("_GridScale", 10f); // Adjust this value to change the grid density
-
-        AtualizarEscudoVisual();
-
-        Destroy(escudoVisual.GetComponent<Collider>());
+        return Mathf.RoundToInt(precoBaseVidaMaxima * Mathf.Pow(1.5f, nivelVidaMaxima));
     }
 
-    private void AtualizarEscudoVisual()
+    public int GetPrecoUpgradeRegeneracao()
     {
-        if (escudoVisual != null)
-        {
-            Renderer escudoRenderer = escudoVisual.GetComponent<Renderer>();
-            float alpha = escudoMaximo > 0 ? escudoAtual / escudoMaximo : 0;
-            Color escudoCor = new Color(0.3f, 0.7f, 1f, alpha * 0.7f);
-            escudoRenderer.material.SetColor("_Color", escudoCor);
-            escudoRenderer.material.SetColor("_RimColor", new Color(0.5f, 0.8f, 1f, 1f));
-            escudoRenderer.material.SetFloat("_RimPower", 3f);
-            escudoRenderer.material.SetFloat("_IntersectionThreshold", 0.1f);
+        return Mathf.RoundToInt(precoBaseRegeneracao * Mathf.Pow(1.5f, nivelRegeneracao));
+    }
 
-            // Add pulsating effect
-            float pulseSpeed = 2f;
-            float pulseAmount = 0.1f;
-            float pulse = Mathf.Sin(Time.time * pulseSpeed) * pulseAmount + 1f;
-            escudoVisual.transform.localScale = Vector3.one * 1.2f * pulse;
-        }
+    public int GetPrecoUpgradeEscudo()
+    {
+        return Mathf.RoundToInt(precoBaseEscudo * Mathf.Pow(1.5f, nivelEscudo));
+    }
+
+    public int GetPrecoUpgradeFortificacao()
+    {
+        return Mathf.RoundToInt(precoBaseFortificacao * Mathf.Pow(1.5f, nivelFortificacao));
     }
 }
 
