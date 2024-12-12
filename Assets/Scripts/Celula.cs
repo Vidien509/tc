@@ -196,6 +196,13 @@ public class Celula : MonoBehaviour
         UpdateBorderWidth();
     }
 
+    public void AnimateCreation()
+    {
+        gameObject.SetActive(true);
+        transform.localScale = Vector3.zero;
+        LeanTween.scale(gameObject, Vector3.one, 0.3f).setEaseOutBack();
+    }
+
     public void SetBorderWidth(float width)
     {
         borderWidth = width;

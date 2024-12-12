@@ -1,9 +1,9 @@
-using CodeMonkey.Utils;
+ï»¿using CodeMonkey.Utils;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using static System.Net.Mime.MediaTypeNames;
+using System;
 
 public class GameLoop : MonoBehaviour
 {
@@ -13,7 +13,7 @@ public class GameLoop : MonoBehaviour
     public int valorSinal;
     public int valor1 = 0;
     public int valor2 = 0;
-    public string questao = "Quanto é ";
+    public string questao = "Quanto ï¿½ ";
 
     public int valorResposta = 0;
     public TMP_InputField inputField;
@@ -44,61 +44,81 @@ public class GameLoop : MonoBehaviour
 
     private int periodoCiclo;
     private float tempoCiclo; // Tempo acumulado no ciclo
-    public bool faseRespondendo; // Indica se está no estado de responder questões
-    public SpawnerInimigos spawner; // Referência ao spawner
+    public bool faseRespondendo; // Indica se estï¿½ no estado de responder questï¿½es
+    public SpawnerInimigos spawner; // Referï¿½ncia ao spawner
 
-    void Start()
+    public GameObject painelTut1;
+    public GameObject painelTut2;
+    public GameObject painelTut3;
+    public GameObject painelTut4;
+    public GameObject btnProximo;
+    public bool jogoIniciado = false;
+
+    void StartGameLoop()
     {
+        jogoIniciado = true;
         periodoCiclo = 30;
         fase = 1;
         listaSinal = new List<string> { " + ", " - ", " x ", " / " };
         menuQuestao.SetActive(false);
+        textFase.transform.gameObject.SetActive(true);
+        textTempoJogo.transform.gameObject.SetActive(true);
         spawner = transform.GetComponent<SpawnerInimigos>();
         gameController = transform.GetComponent<GameController>();
         faseRespondendo = true;
         tempoCiclo = 0f;
-        spawner.StopSpawner(); // Certifique-se de parar o spawner no início
-        iniciarNovaQuestao(); // Começa a primeira questão
+        spawner.StopSpawner(); // Certifique-se de parar o spawner no inï¿½cio
+        iniciarNovaQuestao(); // Comeï¿½a a primeira questï¿½o
+        gameController.StartGameController();
     }
 
     void Update()
     {
-        tempoCiclo += Time.deltaTime;
-
-        if (faseRespondendo)
+        if (jogoIniciado)
         {
-            // Fase de responder perguntas
-            tempoQuestao += Time.deltaTime;
+            tempoCiclo += Time.deltaTime;
 
-            if (tempoCiclo >= 10)
+            if (faseRespondendo)
             {
-                // Finaliza a fase de responder perguntas
-                faseRespondendo = false;
-                tempoCiclo = 0f;
-                spawner.StartSpawner(fase*10, periodoCiclo);
-                menuQuestao.SetActive(false);
-            }
-            else if (verificarResposta(inputField.text))
-            {
-                // Gera nova questão ao responder corretamente
-                processarRespostaCorreta(tempoQuestao);
-                iniciarNovaQuestao();
-            }
-        }
-        else
-        {
-            // Fase de combate
-            if (tempoCiclo >= periodoCiclo)
-            {
-                faseRespondendo = true;
-                tempoCiclo = 0f;
-                fase++;
-                spawner.StopSpawner();
-                iniciarNovaQuestao(); // Reinicia o ciclo com nova questão
-            }
-        }
+                // Fase de responder perguntas
+                tempoQuestao += Time.deltaTime;
 
-        atualizaTextTempoJogo();
+                if (tempoCiclo >= 10)
+                {
+                    // Finaliza a fase de responder perguntas
+                    faseRespondendo = false;
+                    tempoCiclo = 0f;
+                    spawner.StartSpawner(fase * 10, periodoCiclo);
+                    menuQuestao.SetActive(false);
+                }
+                else if (verificarResposta(inputField.text))
+                {
+                    // Gera nova questï¿½o ao responder corretamente
+                    processarRespostaCorreta(tempoQuestao);
+                    iniciarNovaQuestao();
+                }
+            }
+            else
+            {
+                // Fase de combate
+                if (tempoCiclo >= periodoCiclo)
+                {
+                    faseRespondendo = true;
+                    tempoCiclo = 0f;
+                    fase++;
+                    spawner.StopSpawner();
+                    iniciarNovaQuestao();
+
+                    // Check if it's time to spawn a boss
+                    if (fase % 10 == 0)
+                    {
+                        CriarBossUnico();
+                    }
+                }
+            }
+
+            atualizaTextTempoJogo();
+        }
     }
 
     private void iniciarNovaQuestao()
@@ -117,7 +137,7 @@ public class GameLoop : MonoBehaviour
 
     private void processarRespostaCorreta(float tempoQuestao)
     {
-        questao = "Quanto é ";
+        questao = "Quanto Ã© ";
         GameObject textoPopupI = Instantiate(textoPopup, new Vector3(0, -50, 0), Quaternion.identity);
         TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
         text.color = Color.green;
@@ -126,7 +146,7 @@ public class GameLoop : MonoBehaviour
         if (tempoQuestao <= 1.5f)
         {
 
-            GameObject textoPopupRC = Instantiate(textoPopup, new Vector3(0,0,0), Quaternion.identity);
+            GameObject textoPopupRC = Instantiate(textoPopup, new Vector3(0, 0, 0), Quaternion.identity);
             TextMeshPro textRC = textoPopupRC.GetComponent<TextMeshPro>();
             TextoPopup textoPopupScript = textoPopupRC.GetComponent<TextoPopup>();
             textoPopupScript.Configure(true, false, false, 1f, 3f);
@@ -162,27 +182,29 @@ public class GameLoop : MonoBehaviour
             text.color = Color.green;
             text.text = "+ $ 10";
             gameController.recurso += 10;
-        }    
+        }
     }
 
     public void gerarQuestao()
     {
         UnityEngine.UI.Image painelNivelQ = nivelQuestao.GetComponent<UnityEngine.UI.Image>();
-        valor1 = Random.Range(1, 10);
-        valor2 = Random.Range(1, 10);
-        valorSinal = Random.Range(0, 4);
+        valor1 = UnityEngine.Random.Range(1, 10);
+        valor2 = UnityEngine.Random.Range(1, 10);
+        valorSinal = UnityEngine.Random.Range(0, 4);
         sinal = listaSinal[valorSinal];
-        
+
         if (sinal == " / ")
         {
             painelNivelQ.color = Color.yellow;
-            int multiplicador = Random.Range(1, 10);
+            int multiplicador = UnityEngine.Random.Range(1, 10);
             valor1 = valor2 * multiplicador;
-        }else if (sinal == " - ")
+        }
+        else if (sinal == " - ")
         {
             painelNivelQ.color = Color.blue;
-            valor1 = Random.Range(valor2, 10);
-        }else if(sinal ==  " + ")
+            valor1 = UnityEngine.Random.Range(valor2, 10);
+        }
+        else if (sinal == " + ")
         {
             painelNivelQ.color = Color.red;
         }
@@ -190,7 +212,7 @@ public class GameLoop : MonoBehaviour
         {
             painelNivelQ.color = Color.green;
         }
-        questao = "Quanto é " + valor1 + sinal + valor2 + "?";
+        questao = "Quanto Ã© " + valor1 + sinal + valor2 + "?";
         calcularResposta();
     }
 
@@ -220,7 +242,7 @@ public class GameLoop : MonoBehaviour
                 valorResposta = valor2 != 0 ? valor1 / valor2 : 0;
                 break;
             default:
-                Debug.LogError("Sinal inválido");
+                Debug.LogError("Sinal invÃ¡lido");
                 break;
         }
     }
@@ -234,5 +256,66 @@ public class GameLoop : MonoBehaviour
     {
         textTempoJogo.text = tempoCiclo.ToString("F2");
     }
+    public void proximoTutorial()
+    {
+        Debug.Log("Clicado " + painelTut1.active);
+        if (painelTut1.active)
+        {
+            painelTut1.SetActive(false);
+            painelTut2.SetActive(true);
+        }
+        else if (painelTut2.active)
+        {
+            painelTut2.SetActive(false);
+            painelTut3.SetActive(true);
+        }
+        else if (painelTut3.active)
+        {
+            painelTut3.SetActive(false);
+            painelTut4.SetActive(true);
+            btnProximo.GetComponentInChildren<TextMeshProUGUI>().text = "Jogar";
+        }
+        else if (painelTut4.active)
+        {
+            painelTut4.SetActive(false);
+            btnProximo.SetActive(false);
+            StartGameLoop();
+        }
+    }
 
+    private void CriarBossUnico()
+    {
+        // Create a unique visual for the boss without using textures
+        GameObject bossObject = new GameObject("BossEnemy");
+        SpriteRenderer spriteRenderer = bossObject.AddComponent<SpriteRenderer>();
+
+        // Create a circular sprite for the boss
+        Texture2D texture = new Texture2D(128, 128);
+        Color[] colors = new Color[128 * 128];
+
+        for (int y = 0; y < 128; y++)
+        {
+            for (int x = 0; x < 128; x++)
+            {
+                float distanceFromCenter = Vector2.Distance(new Vector2(x, y), new Vector2(64, 64));
+                if (distanceFromCenter < 60)
+                {
+                    colors[y * 128 + x] = Color.Lerp(Color.red, Color.yellow, Mathf.PingPong(distanceFromCenter * 0.1f + fase, 1));
+                }
+                else
+                {
+                    colors[y * 128 + x] = Color.clear;
+                }
+            }
+        }
+
+        texture.SetPixels(colors);
+        texture.Apply();
+
+        spriteRenderer.sprite = Sprite.Create(texture, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
+
+        // Set the boss object's position, scale, etc. as needed
+        // You may want to pass this object to your SpawnerInimigos or set it up directly here
+    }
 }
+

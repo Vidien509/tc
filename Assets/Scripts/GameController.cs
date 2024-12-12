@@ -12,9 +12,6 @@ public class GameController : MonoBehaviour
     private Color corSelecionada;
     private ColorBlock corOriginal;
 
-    public Button botaoEscudo;
-    private bool escudoSelecionado = false;
-
     private CellState stateMenuSelecionado = CellState.torre;
     private int precoTorre = 10;
     private int precoUpgrade;
@@ -39,26 +36,27 @@ public class GameController : MonoBehaviour
 
     private GameObject menuUpgradeNucleo;
     private Nucleo nucleoAtual;
+    private bool jogoIniciado = false;
 
-    private void Start()
+    public void StartGameController()
     {
+        jogoIniciado = true;
         precoUpgrade = 15;
         recurso = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
-        gameGrid = new Grid(14, 10, 4f, new Vector3(-30, -20, 0), cellPrefab, this.transform);
+
+        // Create a new GameObject for the grid and add the Grid component
+        GameObject gridObject = new GameObject("Grid");
+        gameGrid = gridObject.AddComponent<Grid>();
+        gameGrid.InitializeGrid(14, 10, 4f, new Vector3(-30, -20, 0), cellPrefab, this.transform);
+
         gameGrid.SetRecursosAleatorios();
 
         if (!ColorUtility.TryParseHtmlString(corSelecionadaHex, out corSelecionada))
         {
             Debug.LogError("Cor hexadecimal inválida: " + corSelecionadaHex);
         }
-
-        botaoEscudo.onClick.AddListener(() => {
-            onClickBotao();
-        });
-
-        corOriginal = botaoEscudo.colors;
 
         CriarMenuUpgrade();
         CriarMenuUpgradeNucleo();
@@ -203,24 +201,9 @@ public class GameController : MonoBehaviour
         textComponent.alignment = TextAlignmentOptions.Center;
     }
 
-    public void onClickBotao()
-    {
-        escudoSelecionado = !escudoSelecionado;
-        if (escudoSelecionado)
-        {
-            ColorBlock cb = botaoEscudo.colors;
-            cb.normalColor = corSelecionada;
-            botaoEscudo.colors = cb;
-        }
-        else
-        {
-            botaoEscudo.colors = corOriginal;
-        }
-    }
-
     private void Update()
     {
-        if (!gameLoop.faseRespondendo && !menuAberto)
+        if (jogoIniciado && !gameLoop.faseRespondendo && !menuAberto)
         {
             gameGrid.HighlightCelula(UtilsClass.GetMouseWorldPosition());
 
@@ -229,11 +212,7 @@ public class GameController : MonoBehaviour
                 Celula cel = gameGrid.GetCelula(UtilsClass.GetMouseWorldPosition());
                 if (cel)
                 {
-                    if (escudoSelecionado)
-                    {
-                        AplicarEscudo(cel);
-                    }
-                    else if (cel.GetCellState() == CellState.vazia)
+                    if (cel.GetCellState() == CellState.vazia)
                     {
                         ComprarTorre(cel);
                     }
@@ -253,24 +232,6 @@ public class GameController : MonoBehaviour
         {
             FecharMenu();
             FecharMenuNucleo();
-        }
-    }
-
-    private void AplicarEscudo(Celula cel)
-    {
-        if (cel.GetCellState() == CellState.nucleo)
-        {
-            Nucleo nucleo = cel.GetComponent<Nucleo>();
-            if (nucleo != null)
-            {
-                nucleo.AdicionarVida(10);
-                GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-                TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-                text.color = Color.green;
-                text.text = "+10 Vida";
-                escudoSelecionado = false;
-                botaoEscudo.colors = corOriginal;
-            }
         }
     }
 
@@ -383,12 +344,6 @@ public class GameController : MonoBehaviour
             menuAberto = false;
             torreAtual = null;
         }
-
-        if (escudoSelecionado)
-        {
-            escudoSelecionado = false;
-            botaoEscudo.colors = corOriginal;
-        }
     }
 
     private void VenderTorreAtual()
@@ -404,7 +359,15 @@ public class GameController : MonoBehaviour
                 TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
                 text.color = Color.green;
                 text.text = "+ $ " + valorVenda;
+
+                // Destruir o componente Torre
+                Destroy(torreAtual);
+
+                // Resetar a célula para o estado vazio
                 cel.SetCellState(CellState.vazia);
+                cel.setValue("0");
+                cel.UpdateCellVisuals();
+
                 atualizaTextRecursos();
                 FecharMenu();
             }
@@ -508,10 +471,10 @@ public class GameController : MonoBehaviour
         float buttonWidth = 160f;
         float buttonHeight = 30f;
 
-        CriarBotaoUpgradeNucleo("Vida Máxima", new Vector2(0, 45), buttonWidth, buttonHeight, Color.green);
-        CriarBotaoUpgradeNucleo("Regeneração", new Vector2(0, 0), buttonWidth, buttonHeight, Color.blue);
-        CriarBotaoUpgradeNucleo("Escudo", new Vector2(0, -45), buttonWidth, buttonHeight, Color.yellow);
-        CriarBotaoUpgradeNucleo("Fortificação", new Vector2(0, -90), buttonWidth, buttonHeight, Color.cyan);
+        CriarBotaoUpgradeNucleo("Vida Máxima", new Vector2(0, 60), buttonWidth, buttonHeight, Color.green);
+        CriarBotaoUpgradeNucleo("Regeneração", new Vector2(0, 20), buttonWidth, buttonHeight, Color.blue);
+        CriarBotaoUpgradeNucleo("Escudo", new Vector2(0, -20), buttonWidth, buttonHeight, Color.yellow);
+        CriarBotaoUpgradeNucleo("Fortificação", new Vector2(0, -60), buttonWidth, buttonHeight, Color.cyan);
 
         menuUpgradeNucleo.SetActive(false);
 

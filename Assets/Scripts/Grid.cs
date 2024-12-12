@@ -12,14 +12,15 @@ public class Grid : MonoBehaviour
     private int height;
     private Celula[,] gridArray;
     private Vector3 originPosition;
-    private float cellSize;
+    public float cellSize; // Update 3: Added public cellSize
 
     private TextMesh[,] debugTextArray;
-    public Grid(int width, int height, float cellSize, Vector3 originPosition, GameObject cellPrefab, Transform originTransform)
+
+    public void InitializeGrid(int width, int height, float cellSize, Vector3 originPosition, GameObject cellPrefab, Transform originTransform)
     {
         this.width = width;
         this.height = height;
-        this.cellSize = cellSize;
+        this.cellSize = cellSize; // Update 4: Assign cellSize
         this.originPosition = originPosition;
 
         gridArray = new Celula[width, height];
@@ -31,10 +32,30 @@ public class Grid : MonoBehaviour
                 Vector3 position = new Vector3(x, y, 0);
                 GameObject cellObj = Instantiate(cellPrefab, getWorldPosition(x, y) + new Vector3(cellSize, cellSize) * .5f, Quaternion.identity);
                 cellObj.transform.parent = originTransform;
-                cellObj.transform.localScale = new Vector3(cellSize, cellSize, 0);
+                cellObj.transform.localScale = Vector3.one; // Update 1: Set localScale to Vector3.one
                 gridArray[x, y] = cellObj.GetComponent<Celula>();
                 gridArray[x, y].setValue("");
+                gridArray[x, y].gameObject.SetActive(false); // Hide the cell initially
                 gridArray[x, y].UpdateCellVisuals();
+            }
+        }
+    }
+
+    private void Start()
+    {
+        StartCoroutine(AnimateCellCreation());
+    }
+
+    public IEnumerator AnimateCellCreation()
+    {
+        for (int x = 0; x < gridArray.GetLength(0); x++)
+        {
+            for (int y = 0; y < gridArray.GetLength(1); y++)
+            {
+                gridArray[x, y].gameObject.SetActive(true); // Update 2: Activate the cell
+                gridArray[x, y].transform.localScale = Vector3.zero; // Update 2: Set initial scale to zero
+                LeanTween.scale(gridArray[x, y].gameObject, Vector3.one * cellSize, 0.3f).setEaseOutBack(); // Update 2: Animate scaling
+                yield return new WaitForSeconds(0.02f);
             }
         }
     }
@@ -129,7 +150,8 @@ public class Grid : MonoBehaviour
                 ultimaCelulaHigh.UpdateCellVisuals();
             }
             ultimaCelulaHigh = cel;
-        }else if (ultimaCelulaHigh)
+        }
+        else if (ultimaCelulaHigh)
         {
             ultimaCelulaHigh.UpdateCellVisuals();
             ultimaCelulaHigh = null;
@@ -157,25 +179,6 @@ public class Grid : MonoBehaviour
                 }
 
                 cel.UpdateCellVisuals();
-            }
-        }
-    }
-
-    public void SetInteractive(bool interactive)
-    {
-        for (int x = 0; x < gridArray.GetLength(0); x++)
-        {
-            for (int y = 0; y < gridArray.GetLength(1); y++)
-            {
-                Celula celula = gridArray[x, y];
-                if (celula != null)
-                {
-                    Collider2D collider = celula.GetComponent<Collider2D>();
-                    if (collider != null)
-                    {
-                        collider.enabled = interactive;
-                    }
-                }
             }
         }
     }

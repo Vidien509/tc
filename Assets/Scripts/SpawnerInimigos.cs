@@ -1,17 +1,17 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI; // Importante para usar o Text UI
+using UnityEngine.UI;
 
 public class SpawnerInimigos : MonoBehaviour
 {
     public GameObject prefabInimigo; // Prefab do inimigo
     public Transform[] pontosDeSpawn; // Pontos onde os inimigos aparecem
     public float raioSpawn = 3f; // Raio ao redor do ponto de spawn para gerar inimigos aleatoriamente
-    public TextMeshProUGUI textoContagemInimigos; // Texto UI que mostrará a contagem de inimigos
+    public TextMeshProUGUI textoContagemInimigos; // Texto UI que mostrarï¿½ a contagem de inimigos
 
-    private Nucleo[] nucleos; // Array para armazenar os núcleos detectados
+    private Nucleo[] nucleos; // Array para armazenar os nï¿½cleos detectados
     private int inimigosRestantes; // Quantidade de inimigos restantes para spawnar
     private int inimigosTotal;
     private int inimigosVivos; // Quantidade de inimigos vivos na fase
@@ -20,20 +20,30 @@ public class SpawnerInimigos : MonoBehaviour
 
     public void StartSpawner(int quantidadeInimigos, float periodo)
     {
-        // Detecta todas as células marcadas como núcleo
+        // Detecta todas as cï¿½lulas marcadas como nï¿½cleo
         nucleos = FindObjectsOfType<Nucleo>();
 
         if (nucleos.Length == 0)
         {
-            Debug.LogError("Nenhum núcleo encontrado no cenário!");
+            Debug.LogError("Nenhum nï¿½cleo encontrado no cenï¿½rio!");
             return;
         }
 
-        // Configura o número de inimigos e o intervalo
-        inimigosTotal = quantidadeInimigos;
-        inimigosRestantes = quantidadeInimigos;
-        inimigosVivos = quantidadeInimigos;
-        intervaloSpawn = periodo / quantidadeInimigos;
+        // Configura o nï¿½mero de inimigos e o intervalo
+        if (gameLoop.fase % 10 == 0)
+        {
+            inimigosTotal = 1;
+            inimigosRestantes = 1;
+            inimigosVivos = 1;
+            intervaloSpawn = periodo;
+        }
+        else
+        {
+            inimigosTotal = quantidadeInimigos;
+            inimigosRestantes = quantidadeInimigos;
+            inimigosVivos = quantidadeInimigos;
+            intervaloSpawn = periodo / quantidadeInimigos;
+        }
         AtualizarTextoContagem();
         // Inicia o spawn de inimigos
         StartCoroutine(SpawnerLoop());
@@ -62,35 +72,47 @@ public class SpawnerInimigos : MonoBehaviour
     {
         if (nucleos.Length == 0)
         {
-            Debug.LogWarning("Sem núcleos disponíveis para ataque!");
+            Debug.LogWarning("Sem nÃºcleos disponÃ­veis para ataque!");
             return;
         }
 
-        // Seleciona um ponto de spawn aleatório
         Transform pontoSpawn = pontosDeSpawn[Random.Range(0, pontosDeSpawn.Length)];
-
-        // Calcula uma posição aleatória ao redor do ponto de spawn
         Vector3 posicaoAleatoria = GerarPosicaoAleatoria(pontoSpawn.position);
 
-        // Instancia o inimigo
         GameObject inimigoObj = Instantiate(prefabInimigo, posicaoAleatoria, Quaternion.identity);
-
-        // Configura o inimigo para atacar o núcleo mais próximo ou com menos vida
         Inimigo inimigo = inimigoObj.GetComponent<Inimigo>();
+
         if (inimigo != null)
         {
             Nucleo alvo = ObterNucleoAlvo();
             if (alvo != null)
             {
-                inimigo.Configurar(alvo.transform.position, alvo, gameLoop.fase);
-                inimigo.onInimigoMorto += InimigoMorto; // Associa o evento de morte do inimigo
+                InimigoTipo tipoInimigo = DeterminarTipoInimigo();
+                inimigo.Configurar(alvo.transform.position, alvo, gameLoop.fase, tipoInimigo);
+                inimigo.onInimigoMorto += InimigoMorto;
             }
+        }
+    }
+
+    private InimigoTipo DeterminarTipoInimigo()
+    {
+        if (gameLoop.fase % 10 == 0)
+        {
+            return InimigoTipo.Boss;
+        }
+        else if (gameLoop.fase >= 11)
+        {
+            return Random.value < 0.5f ? InimigoTipo.Normal : InimigoTipo.PlasmaResistente;
+        }
+        else
+        {
+            return InimigoTipo.Normal;
         }
     }
 
     private void InimigoMorto()
     {
-        inimigosVivos--; // Decrementa o número de inimigos vivos
+        inimigosVivos--; // Decrementa o nï¿½mero de inimigos vivos
         AtualizarTextoContagem(); // Atualiza o texto de contagem
     }
 
@@ -102,12 +124,12 @@ public class SpawnerInimigos : MonoBehaviour
 
     private Vector3 GerarPosicaoAleatoria(Vector3 pontoBase)
     {
-        // Gera um deslocamento aleatório dentro de um círculo de raio "raioSpawn"
+        // Gera um deslocamento aleatï¿½rio dentro de um cï¿½rculo de raio "raioSpawn"
         Vector2 deslocamento = Random.insideUnitCircle * raioSpawn;
         return pontoBase + new Vector3(deslocamento.x, deslocamento.y, 0);
     }
 
-    // Encontra o núcleo mais próximo ou com menos vida
+    // Encontra o nï¿½cleo mais prï¿½ximo ou com menos vida
     private Nucleo ObterNucleoAlvo()
     {
         Nucleo nucleoAlvo = null;
@@ -116,11 +138,11 @@ public class SpawnerInimigos : MonoBehaviour
 
         foreach (Nucleo nucleo in nucleos)
         {
-            if (nucleo == null) continue; // Ignora núcleos destruídos
+            if (nucleo == null) continue; // Ignora nï¿½cleos destruï¿½dos
 
             float distancia = Vector3.Distance(nucleo.transform.position, transform.position);
 
-            // Prioriza o núcleo com menos vida; se empate, o mais próximo
+            // Prioriza o nï¿½cleo com menos vida; se empate, o mais prï¿½ximo
             if (nucleo.vida < menorVida || (nucleo.vida == menorVida && distancia < menorDistancia))
             {
                 menorVida = nucleo.vida;
@@ -132,3 +154,4 @@ public class SpawnerInimigos : MonoBehaviour
         return nucleoAlvo;
     }
 }
+
