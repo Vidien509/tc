@@ -13,7 +13,7 @@ public class GameLoop : MonoBehaviour
     public int valorSinal;
     public int valor1 = 0;
     public int valor2 = 0;
-    public string questao = "Quanto � ";
+    public string questao = "Quanto é ";
 
     public int valorResposta = 0;
     public TMP_InputField inputField;
@@ -101,7 +101,7 @@ public class GameLoop : MonoBehaviour
             else
             {
                 // Fase de combate
-                if (tempoCiclo >= periodoCiclo)
+                if (tempoCiclo >= periodoCiclo || spawner.inimigosVivos <= 0)
                 {
                     faseRespondendo = true;
                     tempoCiclo = 0f;
@@ -298,9 +298,9 @@ public class GameLoop : MonoBehaviour
             for (int x = 0; x < 128; x++)
             {
                 float distanceFromCenter = Vector2.Distance(new Vector2(x, y), new Vector2(64, 64));
-                if (distanceFromCenter < 60)
+                if (distanceFromCenter < 90)
                 {
-                    colors[y * 128 + x] = Color.Lerp(Color.red, Color.yellow, Mathf.PingPong(distanceFromCenter * 0.1f + fase, 1));
+                    colors[y * 128 + x] = Color.Lerp(Color.red, Color.magenta, Mathf.PingPong(distanceFromCenter * 0.1f + fase, 1));
                 }
                 else
                 {

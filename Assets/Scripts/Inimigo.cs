@@ -214,7 +214,7 @@ public class Inimigo : MonoBehaviour
                 velocidade = (velocidadeBase + (fase * 2f)) * 0.8f;
                 break;
             case InimigoTipo.Boss:
-                vidaMaxima = (vidaBase + (fase * 10)) * 10; // Increased from 5 to 10
+                vidaMaxima = (vidaBase + (fase * 10)) * 50; // Increased from 5 to 10
                 velocidade = (velocidadeBase + (fase * 2f)) * 0.3f; // Decreased from 0.5f to 0.3f
                 break;
         }

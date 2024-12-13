@@ -14,7 +14,7 @@ public class SpawnerInimigos : MonoBehaviour
     private Nucleo[] nucleos; // Array para armazenar os n�cleos detectados
     private int inimigosRestantes; // Quantidade de inimigos restantes para spawnar
     private int inimigosTotal;
-    private int inimigosVivos; // Quantidade de inimigos vivos na fase
+    public int inimigosVivos; // Quantidade de inimigos vivos na fase
     private float intervaloSpawn; // Intervalo entre cada inimigo
     public GameLoop gameLoop;
 
