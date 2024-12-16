@@ -123,7 +123,8 @@ MonoBehaviour:
   velocidade: 2
   textoPopup: {fileID: 3781433772104376586, guid: 6e258e4e6aaba4f4c96bb7e2d6442b51, type: 3}
   gameController: {fileID: 0}
-  projetilPrefab: {fileID: 0}
+  projetilPrefab: {fileID: 5900686201061346758, guid: cb401c7bfcb19fd479ea5314826d16b1, type: 3}
+  tipo: 0
 --- !u!1 &8662867418593447545
 GameObject:
   m_ObjectHideFlags: 0

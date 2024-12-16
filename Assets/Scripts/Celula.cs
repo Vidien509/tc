@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using TMPro;
 using System;
+using System.Collections;
 
 public enum CellState { vazia, torre, nucleo }
 
@@ -23,10 +24,19 @@ public class Celula : MonoBehaviour
         new Color(0.8f, 0.0f, 1.0f)  // Plasma
     };
 
+    private Material materialEspecial;
+    private bool efeitoEspecialAtivo = false;
+
     void Awake()
     {
         SetupBorderRenderer();
         SetupTorreVisual();
+    }
+
+    void Start()
+    {
+        // Crie o material para o efeito especial
+        materialEspecial = new Material(Shader.Find("Sprites/Default"));
     }
 
     private void SetupBorderRenderer()
@@ -239,6 +249,30 @@ public class Celula : MonoBehaviour
             // Atualizar a borda
             borderRenderer.startColor = coresTorre[(int)tipo];
             borderRenderer.endColor = coresTorre[(int)tipo];
+
+            // Adiciona um indicador visual de nível
+            TextMeshPro textoNivel = transform.Find("TextoNivel")?.GetComponent<TextMeshPro>();
+            if (textoNivel == null)
+            {
+                GameObject textoNivelObj = new GameObject("TextoNivel");
+                textoNivelObj.transform.SetParent(transform);
+                textoNivelObj.transform.localPosition = new Vector3(0.35f, 0.35f, -0.1f);
+                textoNivel = textoNivelObj.AddComponent<TextMeshPro>();
+                textoNivel.alignment = TextAlignmentOptions.Center;
+                textoNivel.fontSize = 8;
+            }
+
+            // Define o texto do nível em numeração romana
+            if (nivel < 5)
+            {
+                transform.GetComponent<Torre>().AtualizarTextoNivel();
+                StopCoroutine("EfeitoArcoIrisTexto");
+            }
+            else
+            {
+                textoNivel.text = "S";
+                StartCoroutine(EfeitoArcoIrisTexto(textoNivel));
+            }
         }
     }
 
@@ -307,6 +341,64 @@ public class Celula : MonoBehaviour
 
         // Update visuals
         UpdateCellVisuals();
+    }
+
+    public void AtivarEfeitoEspecial(TorreType tipo)
+    {
+        efeitoEspecialAtivo = true;
+        Color corPredominante = GetCorPredominante(tipo);
+        StartCoroutine(EfeitoArcoIris(corPredominante));
+    }
+
+    private Color GetCorPredominante(TorreType tipo)
+    {
+        switch (tipo)
+        {
+            case TorreType.Gelo:
+                return Color.cyan;
+            case TorreType.Fogo:
+                return new Color(1f, 0.5f, 0f); // Laranja
+            case TorreType.Plasma:
+                return new Color(0.5f, 0f, 0.5f); // Roxo
+            default:
+                return Color.white;
+        }
+    }
+
+    private IEnumerator EfeitoArcoIris(Color corPredominante)
+    {
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Material materialOriginal = spriteRenderer.material;
+        spriteRenderer.material = materialEspecial;
+
+        float h, s, v;
+        Color.RGBToHSV(corPredominante, out h, out s, out v);
+
+        while (efeitoEspecialAtivo)
+        {
+            float hueShift = Mathf.PingPong(Time.time * 0.5f, 0.2f) - 0.1f;
+            Color corAtual = Color.HSVToRGB((h + hueShift) % 1f, s, v);
+            materialEspecial.color = corAtual;
+            yield return null;
+        }
+
+        spriteRenderer.material = materialOriginal;
+    }
+
+    public void DesativarEfeitoEspecial()
+    {
+        efeitoEspecialAtivo = false;
+    }
+
+    private IEnumerator EfeitoArcoIrisTexto(TextMeshPro texto)
+    {
+        float h = 0;
+        while (true)
+        {
+            h = (h + Time.deltaTime * 1.5f) % 1f;
+            texto.color = Color.HSVToRGB(h, 1, 1);
+            yield return null;
+        }
     }
 }
 

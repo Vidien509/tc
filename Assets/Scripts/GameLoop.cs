@@ -27,6 +27,7 @@ public class GameLoop : MonoBehaviour
     public GameController gameController;
 
     public TextMeshProUGUI textFase;
+    public TextMeshProUGUI textPontos;
     public TextMeshProUGUI textTempoJogo;
 
     public TextMeshProUGUI textRespCorreta;
@@ -42,6 +43,17 @@ public class GameLoop : MonoBehaviour
         }
     }
 
+    private int _pontos;
+    public int pontos
+    {
+        get { return _pontos; }
+        set
+        {
+            _pontos = value;
+            atualizaTextPontos();
+        }
+    }
+
     private int periodoCiclo;
     private float tempoCiclo; // Tempo acumulado no ciclo
     public bool faseRespondendo; // Indica se est� no estado de responder quest�es
@@ -54,8 +66,16 @@ public class GameLoop : MonoBehaviour
     public GameObject btnProximo;
     public bool jogoIniciado = false;
 
+    private const float questionTime = 15f;
+    private const float preparationTime = 10f;
+    private bool inPreparationPhase = false;
+    private bool respostaProcessada = false;
+
+    public int multInimigos;
+
     void StartGameLoop()
     {
+        multInimigos = 5;
         jogoIniciado = true;
         periodoCiclo = 30;
         fase = 1;
@@ -82,20 +102,29 @@ public class GameLoop : MonoBehaviour
             {
                 // Fase de responder perguntas
                 tempoQuestao += Time.deltaTime;
+                if (Input.GetKeyDown(KeyCode.Return) && !respostaProcessada)
+                {
+                    ProcessarResposta();
+                }
 
-                if (tempoCiclo >= 10)
+                // Adicione esta verificação para manter o foco
+                if (!inputField.isFocused)
+                {
+                    inputField.ActivateInputField();
+                }
+
+                if (tempoCiclo >= questionTime)
                 {
                     // Finaliza a fase de responder perguntas
-                    faseRespondendo = false;
-                    tempoCiclo = 0f;
-                    spawner.StartSpawner(fase * 10, periodoCiclo);
-                    menuQuestao.SetActive(false);
+                    FinalizarFaseRespondendo();
                 }
-                else if (verificarResposta(inputField.text))
+            }
+            else if (inPreparationPhase)
+            {
+                if (tempoCiclo >= preparationTime)
                 {
-                    // Gera nova quest�o ao responder corretamente
-                    processarRespostaCorreta(tempoQuestao);
-                    iniciarNovaQuestao();
+                    // Finaliza a fase de preparação e inicia o combate
+                    FinalizarFasePreparacao();
                 }
             }
             else
@@ -103,17 +132,7 @@ public class GameLoop : MonoBehaviour
                 // Fase de combate
                 if (tempoCiclo >= periodoCiclo || spawner.inimigosVivos <= 0)
                 {
-                    faseRespondendo = true;
-                    tempoCiclo = 0f;
-                    fase++;
-                    spawner.StopSpawner();
-                    iniciarNovaQuestao();
-
-                    // Check if it's time to spawn a boss
-                    if (fase % 10 == 0)
-                    {
-                        CriarBossUnico();
-                    }
+                    FinalizarFaseCombate();
                 }
             }
 
@@ -125,7 +144,6 @@ public class GameLoop : MonoBehaviour
     {
         menuQuestao.SetActive(true);
         inputField.text = ""; // Limpa o campo de entrada
-        inputField.Select();
         TextMeshProUGUI textoQ = textoQuestao.GetComponent<TextMeshProUGUI>();
         TextMeshProUGUI tituloQ = tituloQuestao.GetComponent<TextMeshProUGUI>();
 
@@ -133,6 +151,13 @@ public class GameLoop : MonoBehaviour
         textoQ.text = questao;
         tituloQ.text = "Responda:";
         tempoQuestao = 0.0f;
+        respostaProcessada = false;
+        inputField.ActivateInputField(); // Substitua a linha Invoke por esta
+    }
+
+    void SelectInputField()
+    {
+        inputField.Select();
     }
 
     private void processarRespostaCorreta(float tempoQuestao)
@@ -157,7 +182,7 @@ public class GameLoop : MonoBehaviour
             text.text = "+ $ 20";
             gameController.recurso += 20;
         }
-        else if (tempoQuestao <= 3.5f)
+        else if (tempoQuestao <= 2.5f)
         {
             GameObject textoPopupRC = Instantiate(textoPopup, new Vector3(0, 0, 0), Quaternion.identity);
             TextMeshPro textRC = textoPopupRC.GetComponent<TextMeshPro>();
@@ -170,7 +195,7 @@ public class GameLoop : MonoBehaviour
             text.text = "+ $ 15";
             gameController.recurso += 15;
         }
-        else if (tempoQuestao > 3.5f)
+        else if (tempoQuestao > 2.5f)
         {
             GameObject textoPopupRC = Instantiate(textoPopup, new Vector3(0, 0, 0), Quaternion.identity);
             TextMeshPro textRC = textoPopupRC.GetComponent<TextMeshPro>();
@@ -252,6 +277,11 @@ public class GameLoop : MonoBehaviour
         textFase.text = "Fase " + fase.ToString();
     }
 
+    public void atualizaTextPontos()
+    {
+        textPontos.text = pontos.ToString();
+    }
+
     public void atualizaTextTempoJogo()
     {
         textTempoJogo.text = tempoCiclo.ToString("F2");
@@ -298,9 +328,9 @@ public class GameLoop : MonoBehaviour
             for (int x = 0; x < 128; x++)
             {
                 float distanceFromCenter = Vector2.Distance(new Vector2(x, y), new Vector2(64, 64));
-                if (distanceFromCenter < 90)
+                if (distanceFromCenter < 60)
                 {
-                    colors[y * 128 + x] = Color.Lerp(Color.red, Color.magenta, Mathf.PingPong(distanceFromCenter * 0.1f + fase, 1));
+                    colors[y * 128 + x] = Color.Lerp(Color.red, Color.yellow, Mathf.PingPong(distanceFromCenter * 0.1f + fase, 1));
                 }
                 else
                 {
@@ -316,6 +346,70 @@ public class GameLoop : MonoBehaviour
 
         // Set the boss object's position, scale, etc. as needed
         // You may want to pass this object to your SpawnerInimigos or set it up directly here
+    }
+
+    private void IniciarFasePreparacao()
+    {
+        Debug.Log("Iniciando fase de preparação. Posicione suas torres!");
+        // Adicione aqui qualquer lógica adicional para a fase de preparação
+    }
+
+    private void IniciarFaseCombate()
+    {
+        Debug.Log("Iniciando fase de combate!");
+        spawner.StartSpawner(fase * multInimigos, 0.2f);
+        menuQuestao.SetActive(false);
+    }
+
+    private void ProcessarResposta()
+    {
+        respostaProcessada = true;
+        if (verificarResposta(inputField.text))
+        {
+            processarRespostaCorreta(tempoQuestao);
+        }
+        iniciarNovaQuestao();
+        inputField.ActivateInputField(); // Adicione esta linha
+    }
+
+    private void FinalizarFaseRespondendo()
+    {
+        faseRespondendo = false;
+        inPreparationPhase = true;
+        tempoCiclo = 0f;
+        menuQuestao.SetActive(false);
+        Debug.Log("Iniciando fase de preparação. Você tem 20 segundos para se preparar!");
+    }
+
+    private void FinalizarFasePreparacao()
+    {
+        inPreparationPhase = false;
+        tempoCiclo = 0f;
+        IniciarFaseCombate();
+    }
+
+    private void FinalizarFaseCombate()
+    {
+        faseRespondendo = true;
+        tempoCiclo = 0f;
+        fase++;
+        spawner.StopSpawner();
+        respostaProcessada = false;
+        iniciarNovaQuestao();
+
+        if (fase % spawner.faseBoss == 0)
+        {
+            CriarBossUnico();
+            gameController.recursosEspeciais++;
+            Debug.Log($"Boss derrotado! Recurso especial adicionado. Total: {gameController.recursosEspeciais}");
+        }
+    }
+
+    public void NotificarBossDerrotado()
+    {
+        spawner.bossVivos--;
+        gameController.recursosEspeciais++;
+        Debug.Log($"Boss derrotado! Recurso especial adicionado. Total: {gameController.recursosEspeciais}");
     }
 }
 

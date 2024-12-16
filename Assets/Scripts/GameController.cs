@@ -2,6 +2,7 @@
 using CodeMonkey.Utils;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 
 public class GameController : MonoBehaviour
 {
@@ -17,6 +18,7 @@ public class GameController : MonoBehaviour
     private int precoUpgrade;
 
     public GameObject textoPopup;
+    Vector3 escalaOriginalTxt;
     private int _recurso;
     public int recurso
     {
@@ -38,13 +40,30 @@ public class GameController : MonoBehaviour
     private Nucleo nucleoAtual;
     private bool jogoIniciado = false;
 
+    // Adicione uma nova propriedade para os recursos especiais
+    private int _recursosEspeciais;
+    public int recursosEspeciais
+    {
+        get { return _recursosEspeciais; }
+        set
+        {
+            _recursosEspeciais = value;
+            atualizaTextRecursosEspeciais();
+        }
+    }
+
+    // Adicione uma referência ao texto de recursos especiais
+    public TextMeshProUGUI textRecursosEspeciais;
+
     public void StartGameController()
     {
         jogoIniciado = true;
         precoUpgrade = 15;
         recurso = 0;
+        recursosEspeciais = 0; // Initialize recursosEspeciais
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
+        escalaOriginalTxt = textRecurso.transform.localScale;
 
         // Create a new GameObject for the grid and add the Grid component
         GameObject gridObject = new GameObject("Grid");
@@ -102,7 +121,8 @@ public class GameController : MonoBehaviour
         CriarBotaoUpgrade("Fogo", new Vector2(0, 0), TorreType.Fogo, buttonWidth, buttonHeight, new Color(1, 0.4f, 0));
         CriarBotaoUpgrade("Plasma", new Vector2(0, -45), TorreType.Plasma, buttonWidth, buttonHeight, new Color(0.8f, 0, 1));
 
-        CriarBotaoVender(new Vector2(0, -95), buttonWidth, buttonHeight);
+        CriarBotaoVender(new Vector2(0, -135), buttonWidth, buttonHeight);
+        //CriarBotaoUpgradeEspecial(new Vector2(0, -85), buttonWidth, buttonHeight);
 
         menuUpgrade.SetActive(false);
 
@@ -263,6 +283,7 @@ public class GameController : MonoBehaviour
             Vector3 posicaoTela = Camera.main.WorldToScreenPoint(posicaoMundo);
             menuUpgrade.transform.Find("MenuContent").position = posicaoTela;
             menuAberto = true;
+            PararEfeitoArcoIrisEmBotoes(); // Para o efeito em todos os botões antes de abrir o menu
             AtualizarBotoesUpgrade();
         }
     }
@@ -271,28 +292,47 @@ public class GameController : MonoBehaviour
     {
         if (torreAtual != null)
         {
-            int custoUpgrade = precoUpgrade * (torreAtual.nivel + 2);
-            if (recurso >= custoUpgrade)
+            if (torreAtual.nivel == 4 && recursosEspeciais >= 1 && torreAtual.poderEspecial == PoderEspecial.Nenhum)
             {
-                recurso -= custoUpgrade;
-                if (torreAtual.tipo == novoTipo)
+                // Realiza o upgrade especial
+                torreAtual.UpgradeEspecial();
+                recursosEspeciais--;
+                torreAtual.nivel++; // Incrementa o nível para indicar o nível especial
+
+                // Inicia o efeito de arco-íris na célula da torre
+                Celula celulaTorre = torreAtual.GetComponent<Celula>();
+                if (celulaTorre != null)
                 {
-                    torreAtual.Upgrade();
+                    celulaTorre.AtivarEfeitoEspecial(torreAtual.tipo);
                 }
-                else
-                {
-                    torreAtual.SetTorreType(novoTipo);
-                }
-                GameObject textoPopupI = Instantiate(textoPopup, torreAtual.transform.position, Quaternion.identity);
-                TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
-                text.color = Color.yellow;
-                text.text = "Upgrade! - $ " + custoUpgrade;
-                atualizaTextRecursos();
-                AtualizarBotoesUpgrade(); // Atualiza os botões após o upgrade
             }
             else
             {
-                MostrarMensagemRecursosInsuficientes(custoUpgrade);
+                int custoUpgrade = precoUpgrade * (torreAtual.nivel + 2);
+                if (recurso >= custoUpgrade)
+                {
+                    recurso -= custoUpgrade;
+                    if (torreAtual.tipo == novoTipo)
+                    {
+                        {
+                            torreAtual.Upgrade();
+                        }
+                    }
+                    else
+                    {
+                        torreAtual.SetTorreType(novoTipo);
+                    }
+                    GameObject textoPopupI = Instantiate(textoPopup, torreAtual.transform.position, Quaternion.identity);
+                    TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
+                    text.color = Color.yellow;
+                    text.text = "Upgrade! - $ " + custoUpgrade;
+                    atualizaTextRecursos();
+                    AtualizarBotoesUpgrade(); // Atualiza os botões após o upgrade
+                }
+                else
+                {
+                    MostrarMensagemRecursosInsuficientes(custoUpgrade);
+                }
             }
         }
     }
@@ -312,10 +352,25 @@ public class GameController : MonoBehaviour
 
     private void MostrarMensagemRecursosInsuficientes(int custo)
     {
-        GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-        TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-        text.color = Color.red;
-        text.text = custo + " $$ Recursos insuficientes!";
+        MostrarMensagemRecursosInsuficientes(custo, "");
+    }
+
+    private void MostrarMensagemRecursosInsuficientes(int custo, string tipoCusto)
+    {
+        if (tipoCusto.Equals(""))
+        {
+            GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+            TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+            text.color = Color.red;
+            text.text = custo + " $$ Recursos insuficientes!";
+        }
+        else
+        {
+            GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+            TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+            text.color = Color.magenta;
+            text.text = custo + " $$ Recursos Especiais insuficientes!";
+        }
     }
 
     public void SetStateMenuSelecionado(string opcao)
@@ -331,9 +386,38 @@ public class GameController : MonoBehaviour
         stateMenuSelecionado = cellState;
     }
 
-    public void atualizaTextRecursos()
+    private void atualizaTextRecursos()
     {
-        textRecurso.text = recurso.ToString();
+        textRecurso.text = recurso.ToString(); // Atualiza o texto imediatamente
+        StartCoroutine(AnimarTextoRecurso(textRecurso));
+    }
+
+    private void atualizaTextRecursosEspeciais()
+    {
+        textRecursosEspeciais.text = recursosEspeciais.ToString(); // Atualiza o texto imediatamente
+        StartCoroutine(AnimarTextoRecurso(textRecursosEspeciais));
+    }
+
+    private IEnumerator AnimarTextoRecurso(TextMeshProUGUI texto)
+    {
+        float intensidadeBrilho = 0f;
+        float duracaoAnimacao = 0.1f;
+
+        LeanTween.scale(texto.gameObject, escalaOriginalTxt * 1.2f, duracaoAnimacao).setEaseOutBack();
+        LeanTween.value(texto.gameObject, 1f, intensidadeBrilho, duracaoAnimacao).setOnUpdate((float valor) => {
+            texto.fontMaterial.SetFloat("_FaceDilate", valor);
+        }).setEaseOutBack().setOnComplete(() => {
+            LeanTween.value(texto.gameObject, intensidadeBrilho, 1f, duracaoAnimacao).setOnUpdate((float valor) => {
+                texto.fontMaterial.SetFloat("_FaceDilate", valor);
+            }).setEaseInBack();
+            LeanTween.scale(texto.gameObject, escalaOriginalTxt, duracaoAnimacao).setEaseInBack();
+        });
+
+
+        yield return new WaitForSeconds(duracaoAnimacao * 2f);
+
+
+        texto.fontMaterial.SetFloat("_FaceDilate", 0f);
     }
 
     private void FecharMenu()
@@ -428,7 +512,33 @@ public class GameController : MonoBehaviour
                 }
                 else if (isCurrentType && !canUpgrade)
                 {
-                    priceText.text = "MAX";
+                    if (torreAtual.nivel == 4)
+                    {
+                        if (recursosEspeciais >= 1 && torreAtual.poderEspecial == PoderEspecial.Nenhum)
+                        {
+                            priceText.text = $"$ 1";
+                            priceText.color = Color.magenta;
+                            TextMeshProUGUI text = child.Find("Text").GetComponent<TextMeshProUGUI>();
+                            text.text = "Upgrade Especial"; // Define o texto para Upgrade Especial
+                            text.color = Color.white;
+                            StartCoroutine(EfeitoArcoIris(child.GetComponent<Image>()));
+                        }
+                        else if (torreAtual.poderEspecial != PoderEspecial.Nenhum)
+                        {
+                            priceText.text = "MAX";
+                            priceText.color = Color.white;
+                        }
+                        else
+                        {
+                            priceText.text = "Sem Recursos";
+                            priceText.color = Color.red;
+                        }
+                    }
+                    else
+                    {
+                        priceText.text = "MAX";
+                        priceText.color = Color.white;
+                    }
                 }
             }
         }
@@ -671,6 +781,51 @@ public class GameController : MonoBehaviour
         foreach (Nucleo nucleo in nucleos)
         {
             nucleo.AvancarFase();
+        }
+    }
+
+    private IEnumerator EfeitoArcoIris(Image imagem)
+    {
+        float h, s, v;
+        Color corBase = imagem.color;
+        Color.RGBToHSV(corBase, out h, out s, out v);
+
+        while (true)
+        {
+            h = (h + Time.deltaTime * 1.5f) % 1f;
+            imagem.color = Color.HSVToRGB(h, 1, 1);
+            yield return null;
+        }
+    }
+    private void Start()
+    {
+        // Crie o objeto de texto para os recursos especiais
+        GameObject recursosEspeciaisObj = new GameObject("RecursosEspeciaisText");
+        recursosEspeciaisObj.transform.SetParent(transform);
+        RectTransform rectTransform = recursosEspeciaisObj.AddComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(1, 1);
+        rectTransform.anchorMax = new Vector2(1, 1);
+        rectTransform.anchoredPosition = new Vector2(-10, -10);
+        rectTransform.sizeDelta = new Vector2(100, 30);
+
+        textRecursosEspeciais = recursosEspeciaisObj.AddComponent<TextMeshProUGUI>();
+        textRecursosEspeciais.alignment = TextAlignmentOptions.Right;
+        textRecursosEspeciais.fontSize = 24;
+        textRecursosEspeciais.color = Color.yellow;
+
+        atualizaTextRecursosEspeciais();
+    }
+
+    private void PararEfeitoArcoIrisEmBotoes()
+    {
+        // Para todas as coroutines de efeito de arco-íris em botões de upgrade
+        foreach (Transform child in menuUpgrade.transform.Find("MenuContent"))
+        {
+            if (child.name.StartsWith("Upgrade"))
+            {
+                StopCoroutine(EfeitoArcoIris(child.GetComponent<Image>()));
+                child.GetComponent<Image>().color = new Color(0f, 0f, 0f, 140f / 255f); // Reseta a cor do botão
+            }
         }
     }
 }

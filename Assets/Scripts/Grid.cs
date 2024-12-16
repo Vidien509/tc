@@ -143,7 +143,7 @@ public class Grid : MonoBehaviour
             cel = gridArray[x, y].GetComponent<Celula>();
             if (cel == ultimaCelulaHigh) return;
             SpriteRenderer renderer = cel.GetComponent<SpriteRenderer>();
-            renderer.color = Color.grey;
+            renderer.color = new Color(200f, 200f, 200f, 140f / 255f);
 
             if (ultimaCelulaHigh)
             {

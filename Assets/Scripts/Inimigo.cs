@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public enum InimigoTipo { Normal, PlasmaResistente, Boss }
+public enum InimigoTipo { Normal, PlasmaResistente, Boss, Divisivel }
 
 public class Inimigo : MonoBehaviour
 {
@@ -17,7 +17,7 @@ public class Inimigo : MonoBehaviour
     private Vector3 alvoAtual;
     private bool chegouNoNucleo = false;
     private Nucleo nucleoAlvo;
-    private int vidaBase;
+    private int vidaBase = 5;
     private int vidaMaxima;
     private int vida;
     private int fase;
@@ -39,9 +39,19 @@ public class Inimigo : MonoBehaviour
 
     public InimigoTipo tipo = InimigoTipo.Normal;
 
+    private float rotationSpeed = 60f;
+    private float rotationDirection = 1f;
+    private float timeSinceLastSpawn = 0f;
+    private const float spawnInterval = 2f;
+
+    private bool estaMorrendo = false;
+
+    // Adicione uma referência ao GameLoop
+    private GameLoop gameLoop;
+
     private void Start()
     {
-        vidaBase = 20;
+        vidaBase = 5;
         intervaloAtaqueDistancia = 5f;
         if (projetilPrefab == null)
         {
@@ -56,6 +66,8 @@ public class Inimigo : MonoBehaviour
         CriarBarraDeVida();
         AtualizarBarraDeVida();
         CreateEnemyVisual();
+        // Modifique o método Start para obter a referência do GameLoop
+        gameLoop = FindObjectOfType<GameLoop>();
     }
 
     private void CreateEnemyVisual()
@@ -72,7 +84,7 @@ public class Inimigo : MonoBehaviour
         //enemyVisual.transform.rotation = Quaternion.Euler(0, 0, -90);
 
         // Set the size (adjust as needed)
-        enemyVisual.transform.localScale = Vector3.one * 1f;
+        enemyVisual.transform.localScale = Vector3.one * 0.7f;
     }
 
     private Sprite CreateEnemySprite()
@@ -90,6 +102,9 @@ public class Inimigo : MonoBehaviour
                 break;
             case InimigoTipo.Boss:
                 CreateBossEnemySprite(colors);
+                break;
+            case InimigoTipo.Divisivel:
+                CreateDivisibleEnemySprite(colors);
                 break;
         }
 
@@ -174,10 +189,42 @@ public class Inimigo : MonoBehaviour
         {
             for (int x = 0; x < 128; x++)
             {
+                Vector2 pos = new Vector2(x - 64, y - 64);
+                float distanceFromCenter = pos.magnitude;
+
+                if (IsInsideHexagon(pos, 60))
+                {
+                    float angle = Mathf.Atan2(pos.y, pos.x);
+                    colors[y * 128 + x] = Color.Lerp(bodyColor, accentColor, Mathf.PingPong(distanceFromCenter * 0.05f + angle * 3f, 1));
+                }
+                else
+                {
+                    colors[y * 128 + x] = Color.clear;
+                }
+            }
+        }
+    }
+
+    private bool IsInsideHexagon(Vector2 pos, float size)
+    {
+        Vector2 q = new Vector2(pos.x * Mathf.Sqrt(3) / 3f - pos.y / 3f, pos.y * 2f / 3f);
+        Vector2 r = new Vector2(q.x * Mathf.Sqrt(3) - q.y, q.y * 2f);
+        return Mathf.Max(Mathf.Abs(q.x), Mathf.Abs(q.y), Mathf.Abs(r.x), Mathf.Abs(r.y)) < size / 128f;
+    }
+
+    private void CreateDivisibleEnemySprite(Color[] colors)
+    {
+        Color bodyColor = Color.magenta;
+        Color coreColor = Color.cyan;
+
+        for (int y = 0; y < 128; y++)
+        {
+            for (int x = 0; x < 128; x++)
+            {
                 float distanceFromCenter = Vector2.Distance(new Vector2(x, y), new Vector2(64, 64));
                 if (distanceFromCenter < 60)
                 {
-                    colors[y * 128 + x] = Color.Lerp(bodyColor, accentColor, Mathf.PingPong(distanceFromCenter * 0.1f + Time.time, 1));
+                    colors[y * 128 + x] = Color.Lerp(bodyColor, coreColor, Mathf.PingPong(distanceFromCenter * 0.1f, 1));
                 }
                 else
                 {
@@ -206,7 +253,7 @@ public class Inimigo : MonoBehaviour
         switch (tipo)
         {
             case InimigoTipo.Normal:
-                vidaMaxima = vidaBase + (fase * 10);
+                vidaMaxima = vidaBase + (fase * 2);
                 velocidade = velocidadeBase + (fase * 2f);
                 break;
             case InimigoTipo.PlasmaResistente:
@@ -214,12 +261,16 @@ public class Inimigo : MonoBehaviour
                 velocidade = (velocidadeBase + (fase * 2f)) * 0.8f;
                 break;
             case InimigoTipo.Boss:
-                vidaMaxima = (vidaBase + (fase * 10)) * 50; // Increased from 5 to 10
-                velocidade = (velocidadeBase + (fase * 2f)) * 0.3f; // Decreased from 0.5f to 0.3f
+                vidaMaxima = (vidaBase + (fase * 10)) * 20;
+                velocidade = (velocidadeBase + (fase * 2f)) * 0.3f;
+                break;
+            case InimigoTipo.Divisivel:
+                vidaMaxima = (vidaBase + (fase * 2));
+                velocidade = velocidadeBase + (fase * 1.5f);
                 break;
         }
         vida = vidaMaxima;
-        temEscudo = fase % 3 == 0; // Adiciona escudo a cada 3 fases
+        temEscudo = fase % 3 == 0;
         AtualizarBarraDeVida();
     }
 
@@ -271,6 +322,27 @@ public class Inimigo : MonoBehaviour
             tempoQueimando -= Time.deltaTime;
             ReceberDano((int)(danoQueimadura * Time.deltaTime));
         }
+
+        if (tipo == InimigoTipo.Boss)
+        {
+            // Adiciona rotação ao boss
+            transform.Rotate(0f, 0f, rotationSpeed * rotationDirection * Time.deltaTime);
+
+            // Inverte a rotação a cada 2 segundos
+            timeSinceLastSpawn += Time.deltaTime;
+            if (timeSinceLastSpawn >= spawnInterval)
+            {
+                rotationDirection *= -1;
+                timeSinceLastSpawn = 0f;
+
+                // Dispara um evento para o SpawnerInimigos gerar inimigos adicionais
+                SpawnerInimigos spawner = FindObjectOfType<SpawnerInimigos>();
+                if (spawner != null)
+                {
+                    spawner.SpawnEnemiesFromBoss(transform.position, 5); // Gera 5 inimigos
+                }
+            }
+        }
     }
 
     void AtacarNucleo()
@@ -283,6 +355,7 @@ public class Inimigo : MonoBehaviour
                 dano *= 3;
             }
             nucleoAlvo.ReceberDano(dano);
+            onInimigoMorto?.Invoke();
             Debug.Log($"Núcleo atacado! Dano: {dano}, Vida restante: {nucleoAlvo.vida}");
         }
         Destroy(gameObject);
@@ -381,6 +454,8 @@ public class Inimigo : MonoBehaviour
 
     public void ReceberDano(int dano)
     {
+        if (estaMorrendo) return;
+
         if (tipo == InimigoTipo.PlasmaResistente && dano > 0)
         {
             dano = Mathf.Max(1, dano / 2);
@@ -397,20 +472,21 @@ public class Inimigo : MonoBehaviour
         ShowHitEffect();
         if (vida <= 0)
         {
-            GameObject textoPopupI = Instantiate(textoPopup, transform.position, Quaternion.identity);
-            TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
-            text.color = Color.green;
-            int recompensa = CalcularRecompensa();
-            text.text = $"+ $ {recompensa}";
-            gameController.recurso += recompensa;
-            onInimigoMorto?.Invoke();
-            Destroy(gameObject);
+            if (tipo == InimigoTipo.Divisivel)
+            {
+                Dividir();
+            }
+            else
+            {
+                estaMorrendo = true;
+                StartCoroutine(ProcessarMorte());
+            }
         }
     }
 
     private int CalcularRecompensa()
     {
-        int recompensaBase = 3 + (fase * 2);
+        int recompensaBase = 1 + (fase * 2);
         switch (tipo)
         {
             case InimigoTipo.Normal:
@@ -455,6 +531,66 @@ public class Inimigo : MonoBehaviour
     private void ShowFireEffect()
     {
         LeanTween.color(gameObject, Color.red, 0.5f).setLoopPingPong(1);
+    }
+
+
+    private void PlayDefeatAnimation()
+    {
+        StartCoroutine(DefeatAnimationCoroutine());
+    }
+
+    private IEnumerator DefeatAnimationCoroutine()
+    {
+        SpriteRenderer spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        Vector3 originalScale = transform.localScale;
+        Color originalColor = spriteRenderer.color;
+
+        float duration = 0.5f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, t);
+            spriteRenderer.color = Color.Lerp(originalColor, Color.clear, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+    }
+
+    public void Dividir()
+    {
+        if (tipo != InimigoTipo.Divisivel) return;
+
+        SpawnerInimigos spawner = FindObjectOfType<SpawnerInimigos>();
+        if (spawner != null)
+        {
+            spawner.SpawnDividedEnemies(transform.position, 2);
+        }
+        Destroy(gameObject);
+    }
+
+    // Modifique o método ProcessarMorte para notificar quando um boss é derrotado
+    private IEnumerator ProcessarMorte()
+    {
+        GameObject textoPopupI = Instantiate(textoPopup, transform.position, Quaternion.identity);
+        TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
+        text.color = Color.green;
+        int recompensa = CalcularRecompensa();
+        text.text = $"+ $ {recompensa}";
+        gameController.recurso += recompensa;
+        onInimigoMorto?.Invoke();
+        velocidade = 0;
+
+        if (tipo == InimigoTipo.Boss && gameLoop != null)
+        {
+            gameLoop.NotificarBossDerrotado();
+        }
+
+        yield return StartCoroutine(DefeatAnimationCoroutine());
+
+        Destroy(gameObject);
     }
 }
 
