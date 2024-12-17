@@ -49,6 +49,9 @@ public class Inimigo : MonoBehaviour
     // Adicione uma referência ao GameLoop
     private GameLoop gameLoop;
 
+    private SpriteRenderer spriteRenderer;
+    private Color corOriginalBoss;
+
     private void Start()
     {
         vidaBase = 5;
@@ -68,6 +71,7 @@ public class Inimigo : MonoBehaviour
         CreateEnemyVisual();
         // Modifique o método Start para obter a referência do GameLoop
         gameLoop = FindObjectOfType<GameLoop>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     private void CreateEnemyVisual()
@@ -182,7 +186,7 @@ public class Inimigo : MonoBehaviour
 
     private void CreateBossEnemySprite(Color[] colors)
     {
-        Color bodyColor = Color.red;
+        Color bodyColor = new Color(0.8f, 0.2f, 0.2f); // Vermelho escuro
         Color accentColor = Color.yellow;
 
         for (int y = 0; y < 128; y++)
@@ -192,10 +196,13 @@ public class Inimigo : MonoBehaviour
                 Vector2 pos = new Vector2(x - 64, y - 64);
                 float distanceFromCenter = pos.magnitude;
 
-                if (IsInsideHexagon(pos, 60))
+                if (distanceFromCenter <= 50) // Define um círculo para o corpo
                 {
-                    float angle = Mathf.Atan2(pos.y, pos.x);
-                    colors[y * 128 + x] = Color.Lerp(bodyColor, accentColor, Mathf.PingPong(distanceFromCenter * 0.05f + angle * 3f, 1));
+                    colors[y * 128 + x] = Color.Lerp(bodyColor, accentColor, distanceFromCenter / 50f);
+                }
+                else if (IsInsideHexagon(pos, 60)) // Define um hexágono ao redor do círculo
+                {
+                    colors[y * 128 + x] = Color.Lerp(bodyColor, Color.clear, (distanceFromCenter - 50f) / 10f);
                 }
                 else
                 {
@@ -520,7 +527,14 @@ public class Inimigo : MonoBehaviour
 
     private void ShowHitEffect()
     {
-        LeanTween.color(gameObject, Color.white, 0.1f).setLoopPingPong(1);
+        if (tipo == InimigoTipo.Boss)
+        {
+            StartCoroutine(PiscarDanoBoss());
+        }
+        else
+        {
+            LeanTween.color(gameObject, Color.white, 0.1f).setLoopPingPong(1);
+        }
     }
 
     private void ShowIceEffect()
@@ -591,6 +605,14 @@ public class Inimigo : MonoBehaviour
         yield return StartCoroutine(DefeatAnimationCoroutine());
 
         Destroy(gameObject);
+    }
+
+    private IEnumerator PiscarDanoBoss()
+    {
+        corOriginalBoss = spriteRenderer.color;
+        spriteRenderer.color = Color.white;
+        yield return new WaitForSeconds(0.1f);
+        spriteRenderer.color = corOriginalBoss;
     }
 }
 

@@ -266,7 +266,7 @@ public class Torre : MonoBehaviour
         }
     }
 
-    private Color GetTowerColor()
+    public Color GetTowerColor()
     {
         switch (tipo)
         {
@@ -403,5 +403,5 @@ public class Torre : MonoBehaviour
         if (number >= 1) return "I" + ToRoman(number - 1);
         throw new ArgumentOutOfRangeException("something bad happened");
     }
-}
 
+}

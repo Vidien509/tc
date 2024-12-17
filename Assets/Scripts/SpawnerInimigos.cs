@@ -20,11 +20,12 @@ public class SpawnerInimigos : MonoBehaviour
 
     public int faseBoss;
     public int bossVivos;
+
     public void StartSpawner(int quantidadeInimigos, float intervaloSpawn)
     {
         // Detecta todas as c�lulas marcadas como n�cleo
-        bossVivos = 0;
         faseBoss = 5;
+        bossVivos = 0;
         nucleos = FindObjectsOfType<Nucleo>();
 
         if (nucleos.Length == 0)
@@ -62,9 +63,10 @@ public class SpawnerInimigos : MonoBehaviour
 
     private IEnumerator SpawnerLoop()
     {
-        if (gameLoop.fase % faseBoss == 0)
+        if (gameLoop.fase % faseBoss == 0 && bossVivos <= 0)
         {
             // Spawn boss and additional enemies
+            bossVivos++;
             CriarInimigo(InimigoTipo.Boss, 1f);
 
             // Instancia outros tipos de inimigos
@@ -97,7 +99,16 @@ public class SpawnerInimigos : MonoBehaviour
         Vector3 posicaoAleatoria = GerarPosicaoAleatoria(pontoSpawn.position);
 
         GameObject inimigoObj = Instantiate(prefabInimigo, posicaoAleatoria, Quaternion.identity);
-        inimigoObj.transform.localScale *= escala;
+
+        if (tipo == InimigoTipo.Boss)
+        {
+            // Define a escala do boss
+            inimigoObj.transform.localScale = new Vector3(2f, 2f, 1f); // Define a escala para 2x o tamanho original
+        }
+        else
+        {
+            inimigoObj.transform.localScale *= escala;
+        }
         Inimigo inimigo = inimigoObj.GetComponent<Inimigo>();
 
         if (inimigo != null)
@@ -115,7 +126,6 @@ public class SpawnerInimigos : MonoBehaviour
     {
         if (gameLoop.fase % faseBoss == 0 && bossVivos <= 0)
         {
-            bossVivos++;
             return InimigoTipo.Boss;
         }
         else if (gameLoop.fase >= 6)
