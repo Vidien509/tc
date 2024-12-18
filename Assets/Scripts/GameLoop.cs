@@ -357,6 +357,14 @@ public class GameLoop : MonoBehaviour
     private void IniciarFaseCombate()
     {
         Debug.Log("Iniciando fase de combate!");
+        if(fase >= 6)
+        {
+            multInimigos = 1;
+        }
+        else
+        {
+            multInimigos = 5;
+        }
         spawner.StartSpawner(fase * multInimigos, 0.2f);
         menuQuestao.SetActive(false);
     }

@@ -235,6 +235,7 @@ public class SpawnerInimigos : MonoBehaviour
             Nucleo alvo = ObterNucleoAlvo();
             if (alvo != null)
             {
+                inimigosVivos++;
                 inimigo.Configurar(alvo.transform.position, alvo, gameLoop.fase, tipo);
                 inimigo.onInimigoMorto += InimigoMorto;
             }

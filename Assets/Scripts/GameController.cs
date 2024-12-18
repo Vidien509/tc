@@ -121,7 +121,7 @@ public class GameController : MonoBehaviour
         CriarBotaoUpgrade("Fogo", new Vector2(0, 0), TorreType.Fogo, buttonWidth, buttonHeight, new Color(1, 0.4f, 0));
         CriarBotaoUpgrade("Plasma", new Vector2(0, -45), TorreType.Plasma, buttonWidth, buttonHeight, new Color(0.8f, 0, 1));
 
-        CriarBotaoVender(new Vector2(0, -135), buttonWidth, buttonHeight);
+        CriarBotaoVender(new Vector2(0, -90), buttonWidth, buttonHeight);
         //CriarBotaoUpgradeEspecial(new Vector2(0, -85), buttonWidth, buttonHeight);
 
         menuUpgrade.SetActive(false);
@@ -424,6 +424,7 @@ public class GameController : MonoBehaviour
     {
         if (menuAberto)
         {
+            PararEfeitoArcoIrisEmBotoes();
             menuUpgrade.SetActive(false);
             menuAberto = false;
             torreAtual = null;
@@ -460,6 +461,7 @@ public class GameController : MonoBehaviour
 
     private void AtualizarBotoesUpgrade()
     {
+        PararEfeitoArcoIrisEmBotoes();
         foreach (Transform child in menuUpgrade.transform.Find("MenuContent"))
         {
             if (child.name.StartsWith("Upgrade"))
@@ -488,6 +490,22 @@ public class GameController : MonoBehaviour
                 }
 
                 arrow.gameObject.SetActive(isCurrentType && canUpgrade);
+
+                TextMeshProUGUI text = child.Find("Text").GetComponent<TextMeshProUGUI>();
+                
+                Debug.Log("--------- child.name: " + child.name);
+                if (child.name.Equals("UpgradeGelo"))
+                {
+                    text.color = new Color(0, 0.7f, 1);
+                }
+                else if (child.name.Equals("UpgradeFogo"))
+                {
+                    text.color = new Color(1, 0.4f, 0);
+                }
+                else
+                {
+                    text.color = new Color(0.8f, 0, 1);
+                }
 
                 // Atualizar o texto do preço
                 TextMeshProUGUI priceText = child.Find("PriceText").GetComponent<TextMeshProUGUI>();
@@ -518,20 +536,18 @@ public class GameController : MonoBehaviour
                         {
                             priceText.text = $"$ 1";
                             priceText.color = Color.magenta;
-                            TextMeshProUGUI text = child.Find("Text").GetComponent<TextMeshProUGUI>();
                             text.text = "Upgrade Especial"; // Define o texto para Upgrade Especial
                             text.color = Color.white;
+                            Debug.Log("INICIANDO ARCO IRIS BOTÃO: " + child.name);
                             StartCoroutine(EfeitoArcoIris(child.GetComponent<Image>()));
                         }
                         else if (torreAtual.poderEspecial != PoderEspecial.Nenhum)
                         {
                             priceText.text = "MAX";
-                            priceText.color = Color.white;
                         }
                         else
                         {
                             priceText.text = "Sem Recursos";
-                            priceText.color = Color.red;
                         }
                     }
                     else
@@ -823,6 +839,7 @@ public class GameController : MonoBehaviour
         {
             if (child.name.StartsWith("Upgrade"))
             {
+                Debug.Log("Parando efeito botão: " + child.name);
                 StopCoroutine(EfeitoArcoIris(child.GetComponent<Image>()));
                 child.GetComponent<Image>().color = new Color(0f, 0f, 0f, 140f / 255f); // Reseta a cor do botão
             }

@@ -264,12 +264,12 @@ public class Inimigo : MonoBehaviour
                 velocidade = velocidadeBase + (fase * 2f);
                 break;
             case InimigoTipo.PlasmaResistente:
-                vidaMaxima = (vidaBase + (fase * 10)) * 2;
-                velocidade = (velocidadeBase + (fase * 2f)) * 0.8f;
+                vidaMaxima = (vidaBase + (fase * 5)) * 2;
+                velocidade = (velocidadeBase + (fase * 2f)) * 0.2f;
                 break;
             case InimigoTipo.Boss:
                 vidaMaxima = (vidaBase + (fase * 10)) * 20;
-                velocidade = (velocidadeBase + (fase * 2f)) * 0.3f;
+                velocidade = (velocidadeBase + (fase * 2f)) * 0.2f;
                 break;
             case InimigoTipo.Divisivel:
                 vidaMaxima = (vidaBase + (fase * 2));
@@ -346,7 +346,7 @@ public class Inimigo : MonoBehaviour
                 SpawnerInimigos spawner = FindObjectOfType<SpawnerInimigos>();
                 if (spawner != null)
                 {
-                    spawner.SpawnEnemiesFromBoss(transform.position, 5); // Gera 5 inimigos
+                    spawner.SpawnEnemiesFromBoss(transform.position, 1); // Gera 5 inimigos
                 }
             }
         }

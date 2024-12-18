@@ -271,11 +271,11 @@ public class Torre : MonoBehaviour
         switch (tipo)
         {
             case TorreType.Gelo:
-                return Color.cyan;
+                return new Color(0, 0.7f, 1);
             case TorreType.Fogo:
-                return Color.red;
+                return new Color(1, 0.4f, 0);
             case TorreType.Plasma:
-                return Color.magenta;
+                return new Color(0.8f, 0, 1);
             default:
                 return Color.white;
         }
