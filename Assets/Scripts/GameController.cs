@@ -60,7 +60,7 @@ public class GameController : MonoBehaviour
         jogoIniciado = true;
         precoUpgrade = 15;
         recurso = 0;
-        recursosEspeciais = 0; // Initialize recursosEspeciais
+        recursosEspeciais = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
         escalaOriginalTxt = textRecurso.transform.localScale;
@@ -398,27 +398,18 @@ public class GameController : MonoBehaviour
         StartCoroutine(AnimarTextoRecurso(textRecursosEspeciais));
     }
 
-    private IEnumerator AnimarTextoRecurso(TextMeshProUGUI texto)
+    public IEnumerator AnimarTextoRecurso(TextMeshProUGUI texto)
     {
-        float intensidadeBrilho = 0f;
         float duracaoAnimacao = 0.1f;
 
-        LeanTween.scale(texto.gameObject, escalaOriginalTxt * 1.2f, duracaoAnimacao).setEaseOutBack();
-        LeanTween.value(texto.gameObject, 1f, intensidadeBrilho, duracaoAnimacao).setOnUpdate((float valor) => {
-            texto.fontMaterial.SetFloat("_FaceDilate", valor);
-        }).setEaseOutBack().setOnComplete(() => {
-            LeanTween.value(texto.gameObject, intensidadeBrilho, 1f, duracaoAnimacao).setOnUpdate((float valor) => {
-                texto.fontMaterial.SetFloat("_FaceDilate", valor);
-            }).setEaseInBack();
+        LeanTween.scale(texto.gameObject, escalaOriginalTxt * 1.2f, duracaoAnimacao).setEaseOutBack().setOnComplete(() =>
+        {
             LeanTween.scale(texto.gameObject, escalaOriginalTxt, duracaoAnimacao).setEaseInBack();
         });
 
-
         yield return new WaitForSeconds(duracaoAnimacao * 2f);
-
-
-        texto.fontMaterial.SetFloat("_FaceDilate", 0f);
     }
+
 
     private void FecharMenu()
     {
@@ -812,24 +803,6 @@ public class GameController : MonoBehaviour
             imagem.color = Color.HSVToRGB(h, 1, 1);
             yield return null;
         }
-    }
-    private void Start()
-    {
-        // Crie o objeto de texto para os recursos especiais
-        GameObject recursosEspeciaisObj = new GameObject("RecursosEspeciaisText");
-        recursosEspeciaisObj.transform.SetParent(transform);
-        RectTransform rectTransform = recursosEspeciaisObj.AddComponent<RectTransform>();
-        rectTransform.anchorMin = new Vector2(1, 1);
-        rectTransform.anchorMax = new Vector2(1, 1);
-        rectTransform.anchoredPosition = new Vector2(-10, -10);
-        rectTransform.sizeDelta = new Vector2(100, 30);
-
-        textRecursosEspeciais = recursosEspeciaisObj.AddComponent<TextMeshProUGUI>();
-        textRecursosEspeciais.alignment = TextAlignmentOptions.Right;
-        textRecursosEspeciais.fontSize = 24;
-        textRecursosEspeciais.color = Color.yellow;
-
-        atualizaTextRecursosEspeciais();
     }
 
     private void PararEfeitoArcoIrisEmBotoes()

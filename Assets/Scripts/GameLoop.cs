@@ -275,11 +275,13 @@ public class GameLoop : MonoBehaviour
     public void atualizaTextFase()
     {
         textFase.text = "Fase " + fase.ToString();
+        //StartCoroutine(gameController.AnimarTextoRecurso(textFase));
     }
 
     public void atualizaTextPontos()
     {
         textPontos.text = pontos.ToString();
+        StartCoroutine(gameController.AnimarTextoRecurso(textPontos));
     }
 
     public void atualizaTextTempoJogo()
@@ -312,48 +314,12 @@ public class GameLoop : MonoBehaviour
             StartGameLoop();
         }
     }
-
-    private void CriarBossUnico()
-    {
-        // Create a unique visual for the boss without using textures
-        GameObject bossObject = new GameObject("BossEnemy");
-        SpriteRenderer spriteRenderer = bossObject.AddComponent<SpriteRenderer>();
-
-        // Create a circular sprite for the boss
-        Texture2D texture = new Texture2D(128, 128);
-        Color[] colors = new Color[128 * 128];
-
-        for (int y = 0; y < 128; y++)
-        {
-            for (int x = 0; x < 128; x++)
-            {
-                float distanceFromCenter = Vector2.Distance(new Vector2(x, y), new Vector2(64, 64));
-                if (distanceFromCenter < 60)
-                {
-                    colors[y * 128 + x] = Color.Lerp(Color.red, Color.yellow, Mathf.PingPong(distanceFromCenter * 0.1f + fase, 1));
-                }
-                else
-                {
-                    colors[y * 128 + x] = Color.clear;
-                }
-            }
-        }
-
-        texture.SetPixels(colors);
-        texture.Apply();
-
-        spriteRenderer.sprite = Sprite.Create(texture, new Rect(0, 0, 128, 128), new Vector2(0.5f, 0.5f));
-
-        // Set the boss object's position, scale, etc. as needed
-        // You may want to pass this object to your SpawnerInimigos or set it up directly here
-    }
-
     private void IniciarFasePreparacao()
     {
         Debug.Log("Iniciando fase de preparação. Posicione suas torres!");
         // Adicione aqui qualquer lógica adicional para a fase de preparação
     }
-
+        
     private void IniciarFaseCombate()
     {
         Debug.Log("Iniciando fase de combate!");
@@ -404,13 +370,6 @@ public class GameLoop : MonoBehaviour
         spawner.StopSpawner();
         respostaProcessada = false;
         iniciarNovaQuestao();
-
-        if (fase % spawner.faseBoss == 0)
-        {
-            CriarBossUnico();
-            gameController.recursosEspeciais++;
-            Debug.Log($"Boss derrotado! Recurso especial adicionado. Total: {gameController.recursosEspeciais}");
-        }
     }
 
     public void NotificarBossDerrotado()

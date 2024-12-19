@@ -14,7 +14,18 @@ public class SpawnerInimigos : MonoBehaviour
     private Nucleo[] nucleos; // Array para armazenar os n�cleos detectados
     private int inimigosRestantes; // Quantidade de inimigos restantes para spawnar
     private int inimigosTotal;
-    public int inimigosVivos; // Quantidade de inimigos vivos na fase
+
+    private int _inimigosVivos;
+    public int inimigosVivos
+    {
+        get { return _inimigosVivos; }
+        set
+        {
+            _inimigosVivos = value;
+            AtualizarTextoContagem(); 
+        }
+    }
+
     private float intervaloSpawn; // Intervalo entre cada inimigo
     public GameLoop gameLoop;
 
@@ -49,7 +60,7 @@ public class SpawnerInimigos : MonoBehaviour
             inimigosVivos = quantidadeInimigos;
             this.intervaloSpawn = intervaloSpawn;
         }
-        AtualizarTextoContagem();
+
         // Inicia o spawn de inimigos
         StartCoroutine(SpawnerLoop());
     }
@@ -154,6 +165,7 @@ public class SpawnerInimigos : MonoBehaviour
     {
         // Exibe o texto com a contagem atual de inimigos
         textoContagemInimigos.text = inimigosVivos + " / " + inimigosTotal;
+        StartCoroutine(gameLoop.gameController.AnimarTextoRecurso(textoContagemInimigos));
     }
 
     private Vector3 GerarPosicaoAleatoria(Vector3 pontoBase)

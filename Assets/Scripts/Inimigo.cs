@@ -590,16 +590,31 @@ public class Inimigo : MonoBehaviour
     {
         GameObject textoPopupI = Instantiate(textoPopup, transform.position, Quaternion.identity);
         TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
-        text.color = Color.green;
-        int recompensa = CalcularRecompensa();
-        text.text = $"+ $ {recompensa}";
-        gameController.recurso += recompensa;
         onInimigoMorto?.Invoke();
         velocidade = 0;
 
         if (tipo == InimigoTipo.Boss && gameLoop != null)
         {
+            text.color = Color.green;
+            int recompensa = CalcularRecompensa();
+            text.text = $"+ $ {recompensa*2}";
+            gameController.recurso += recompensa*2;
+            gameLoop.pontos += recompensa*2;
+
+            GameObject textoPopupIB = Instantiate(textoPopup, transform.position, Quaternion.identity);
+            TextMeshPro textB = textoPopupIB.GetComponent<TextMeshPro>();
+            textB.color = Color.yellow;
+            textB.text = "+ 1 φ";
+
             gameLoop.NotificarBossDerrotado();
+        }
+        else
+        {
+            text.color = Color.green;
+            int recompensa = CalcularRecompensa();
+            text.text = $"+ $ {recompensa}";
+            gameController.recurso += recompensa;
+            gameLoop.pontos += recompensa;
         }
 
         yield return StartCoroutine(DefeatAnimationCoroutine());
