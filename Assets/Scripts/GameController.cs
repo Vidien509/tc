@@ -3,6 +3,7 @@ using CodeMonkey.Utils;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
@@ -54,12 +55,13 @@ public class GameController : MonoBehaviour
 
     // Adicione uma referência ao texto de recursos especiais
     public TextMeshProUGUI textRecursosEspeciais;
+    private Dictionary<Image, Coroutine> corrotinasAtivas = new Dictionary<Image, Coroutine>();
 
     public void StartGameController()
     {
         jogoIniciado = true;
         precoUpgrade = 15;
-        recurso = 0;
+        recurso = 1000;
         recursosEspeciais = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();
@@ -275,6 +277,9 @@ public class GameController : MonoBehaviour
 
     private void AbrirMenuUpgrade(Celula cel)
     {
+        // Primeiro, vamos parar o efeito de arco-íris em todos os botões
+        PararEfeitoArcoIrisEmBotoes();
+
         torreAtual = cel.GetComponent<Torre>();
         if (torreAtual != null)
         {
@@ -283,7 +288,6 @@ public class GameController : MonoBehaviour
             Vector3 posicaoTela = Camera.main.WorldToScreenPoint(posicaoMundo);
             menuUpgrade.transform.Find("MenuContent").position = posicaoTela;
             menuAberto = true;
-            PararEfeitoArcoIrisEmBotoes(); // Para o efeito em todos os botões antes de abrir o menu
             AtualizarBotoesUpgrade();
         }
     }
@@ -483,8 +487,7 @@ public class GameController : MonoBehaviour
                 arrow.gameObject.SetActive(isCurrentType && canUpgrade);
 
                 TextMeshProUGUI text = child.Find("Text").GetComponent<TextMeshProUGUI>();
-                
-                Debug.Log("--------- child.name: " + child.name);
+
                 if (child.name.Equals("UpgradeGelo"))
                 {
                     text.color = new Color(0, 0.7f, 1);
@@ -530,7 +533,6 @@ public class GameController : MonoBehaviour
                             text.text = "Upgrade Especial"; // Define o texto para Upgrade Especial
                             text.color = Color.white;
                             Debug.Log("INICIANDO ARCO IRIS BOTÃO: " + child.name);
-                            StartCoroutine(EfeitoArcoIris(child.GetComponent<Image>()));
                         }
                         else if (torreAtual.poderEspecial != PoderEspecial.Nenhum)
                         {
@@ -547,6 +549,28 @@ public class GameController : MonoBehaviour
                         priceText.color = Color.white;
                     }
                 }
+                if (isCurrentType && torreAtual.nivel == 4 && recursosEspeciais >= 1 && torreAtual.poderEspecial == PoderEspecial.Nenhum)
+                {
+                    Image imagem = child.GetComponent<Image>();
+                    if (!corrotinasAtivas.ContainsKey(imagem))
+                    {
+                        Coroutine novaCorrotina = StartCoroutine(EfeitoArcoIris(imagem));
+                        corrotinasAtivas[imagem] = novaCorrotina;
+                    }
+                }
+                else
+                {
+                    // Parar o efeito se não for o caso especial
+                    Image imagem = child.GetComponent<Image>();
+                    if (corrotinasAtivas.TryGetValue(imagem, out Coroutine corrotina))
+                    {
+                        StopCoroutine(corrotina);
+                        corrotinasAtivas.Remove(imagem);
+                    }
+
+                    imagem.color = new Color(0f, 0f, 0f, 140f / 255f);
+                }
+
             }
         }
     }
@@ -807,14 +831,27 @@ public class GameController : MonoBehaviour
 
     private void PararEfeitoArcoIrisEmBotoes()
     {
-        // Para todas as coroutines de efeito de arco-íris em botões de upgrade
         foreach (Transform child in menuUpgrade.transform.Find("MenuContent"))
         {
             if (child.name.StartsWith("Upgrade"))
             {
-                Debug.Log("Parando efeito botão: " + child.name);
-                StopCoroutine(EfeitoArcoIris(child.GetComponent<Image>()));
-                child.GetComponent<Image>().color = new Color(0f, 0f, 0f, 140f / 255f); // Reseta a cor do botão
+                Image imagem = child.GetComponent<Image>();
+
+                if (corrotinasAtivas.TryGetValue(imagem, out Coroutine corrotina))
+                {
+                    StopCoroutine(corrotina);
+                    corrotinasAtivas.Remove(imagem);
+                }
+
+                // Resetar a cor do botão
+                imagem.color = new Color(0f, 0f, 0f, 140f / 255f);
+
+                // Resetar o texto
+                TextMeshProUGUI text = child.GetComponentInChildren<TextMeshProUGUI>();
+                if (text != null)
+                {
+                    text.text = child.name.Substring(7);
+                }
             }
         }
     }

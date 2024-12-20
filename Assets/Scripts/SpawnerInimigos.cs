@@ -35,7 +35,7 @@ public class SpawnerInimigos : MonoBehaviour
     public void StartSpawner(int quantidadeInimigos, float intervaloSpawn)
     {
         // Detecta todas as c�lulas marcadas como n�cleo
-        faseBoss = 5;
+        faseBoss = 2;
         bossVivos = 0;
         nucleos = FindObjectsOfType<Nucleo>();
 
@@ -69,7 +69,6 @@ public class SpawnerInimigos : MonoBehaviour
     {
         // Cancela o spawn manualmente
         StopAllCoroutines();
-        Debug.Log("Spawner parado.");
     }
 
     private IEnumerator SpawnerLoop()

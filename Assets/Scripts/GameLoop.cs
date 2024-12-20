@@ -66,8 +66,8 @@ public class GameLoop : MonoBehaviour
     public GameObject btnProximo;
     public bool jogoIniciado = false;
 
-    private const float questionTime = 15f;
-    private const float preparationTime = 10f;
+    private float questionTime;
+    private float preparationTime;
     private bool inPreparationPhase = false;
     private bool respostaProcessada = false;
 
@@ -78,6 +78,8 @@ public class GameLoop : MonoBehaviour
         multInimigos = 5;
         jogoIniciado = true;
         periodoCiclo = 30;
+        questionTime = 1f;
+        preparationTime = 1f;
         fase = 1;
         listaSinal = new List<string> { " + ", " - ", " x ", " / " };
         menuQuestao.SetActive(false);
@@ -290,7 +292,6 @@ public class GameLoop : MonoBehaviour
     }
     public void proximoTutorial()
     {
-        Debug.Log("Clicado " + painelTut1.active);
         if (painelTut1.active)
         {
             painelTut1.SetActive(false);
@@ -314,15 +315,9 @@ public class GameLoop : MonoBehaviour
             StartGameLoop();
         }
     }
-    private void IniciarFasePreparacao()
-    {
-        Debug.Log("Iniciando fase de preparação. Posicione suas torres!");
-        // Adicione aqui qualquer lógica adicional para a fase de preparação
-    }
         
     private void IniciarFaseCombate()
     {
-        Debug.Log("Iniciando fase de combate!");
         if(fase >= 6)
         {
             multInimigos = 1;
@@ -352,7 +347,6 @@ public class GameLoop : MonoBehaviour
         inPreparationPhase = true;
         tempoCiclo = 0f;
         menuQuestao.SetActive(false);
-        Debug.Log("Iniciando fase de preparação. Você tem 20 segundos para se preparar!");
     }
 
     private void FinalizarFasePreparacao()
@@ -376,7 +370,6 @@ public class GameLoop : MonoBehaviour
     {
         spawner.bossVivos--;
         gameController.recursosEspeciais++;
-        Debug.Log($"Boss derrotado! Recurso especial adicionado. Total: {gameController.recursosEspeciais}");
     }
 }
 
