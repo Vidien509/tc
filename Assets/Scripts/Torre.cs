@@ -30,6 +30,7 @@ public class Torre : MonoBehaviour
     private float shootAnimationDuration = 0.1f;
     private float bloomIntensity = 1.5f;
     private Material bloomMaterial;
+    Color originalColor;
 
     private void Awake()
     {
@@ -46,6 +47,9 @@ public class Torre : MonoBehaviour
 
     void Start()
     {
+        SpriteRenderer spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        originalColor = spriteRenderer.color;
+
         AtualizarAtributos();
         StartCoroutine(AtaqueContinuo());
 
@@ -220,7 +224,6 @@ public class Torre : MonoBehaviour
     private IEnumerator ShootingAnimation()
     {
         SpriteRenderer spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        Color originalColor = spriteRenderer.color;
         Color shootColor = GetTowerColor();
         shootColor.a = 0.7f; // Ajuste a transparência aqui
 

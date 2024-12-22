@@ -25,6 +25,7 @@ public class Nucleo : MonoBehaviour
     public float regeneracaoVida;
     public int nivel;
 
+    Color originalColor;
     public Celula cel;
     private TextMeshPro textoVida;
     private TextMeshPro textoEscudo;
@@ -40,14 +41,19 @@ public class Nucleo : MonoBehaviour
     // Atributos para o escudo
     private float escudoAtual;
 
-    // Preços base para upgrades
+    // Preï¿½os base para upgrades
     private int precoBaseVidaMaxima = 35;
     private int precoBaseRegeneracao = 25;
     private int precoBaseEscudo = 15;
     private int precoBaseFortificacao = 30;
 
+    private float bloomIntensity = 1.5f;
+    private Material bloomMaterial;
+
     void Start()
     {
+        SpriteRenderer renderer = GetComponent<SpriteRenderer>();
+        originalColor = renderer.color;
         timerRegen = 0f;
         textoVida = transform.GetChild(0).GetComponent<TextMeshPro>();
         textoVida.fontSize = 3.5f;
@@ -63,17 +69,19 @@ public class Nucleo : MonoBehaviour
         nivelFortificacao = 0;
         escudoAtual = 0f;
 
+        bloomMaterial = new Material(Shader.Find("Hidden/BloomShader"));
+        bloomMaterial.SetFloat("_BloomIntensity", bloomIntensity);
+
         CriarTextoEscudo();
         CriarTextoNivel();
         AtualizarTextoVida();
         AtualizarTextoEscudo();
         AtualizarTextoNivel();
-        AtualizarCorCelula();
     }
 
     void Update()
     {
-        // Regeneração de vida
+        // Regeneraï¿½ï¿½o de vida
         if (vida < vidaMaxima)
         {
             timerRegen += Time.deltaTime;
@@ -103,7 +111,7 @@ public class Nucleo : MonoBehaviour
                 escudoAtual = 0;
             }
             AtualizarTextoEscudo();
-            AtualizarCorCelula();
+            StartCoroutine(IndicarDano());
         }
 
         if (danoReduzido > 0)
@@ -111,7 +119,7 @@ public class Nucleo : MonoBehaviour
             vida -= danoReduzido;
             if (vida <= 0)
             {
-                Debug.Log("O núcleo foi destruído!");
+                Debug.Log("O nï¿½cleo foi destruï¿½do!");
                 Destroy(gameObject);
             }
             else
@@ -131,19 +139,6 @@ public class Nucleo : MonoBehaviour
     private void AtualizarTextoEscudo()
     {
         textoEscudo.text = $"{Mathf.CeilToInt(escudoAtual)}";
-    }
-
-    private void AtualizarCorCelula()
-    {
-        SpriteRenderer renderer = GetComponent<SpriteRenderer>();
-        if (escudoAtual > 0)
-        {
-            renderer.color = Color.blue;
-        }
-        else
-        {
-            renderer.color = Color.white;
-        }
     }
 
     public void AdicionarVida(int quantidade)
@@ -172,7 +167,7 @@ public class Nucleo : MonoBehaviour
         escudoAtual += 20 + nivelEscudo*5;
         AtualizarTextoNivel();
         AtualizarTextoEscudo();
-        AtualizarCorCelula();
+        StartCoroutine(IndicarDano());
     }
 
     public void UpgradeFortificacao()
@@ -194,26 +189,43 @@ public class Nucleo : MonoBehaviour
     private IEnumerator IndicarDano()
     {
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
-        Color originalColor = renderer.color;
-        renderer.color = Color.red;
-        yield return new WaitForSeconds(0.3f);
-        float fadeDuration = 0.5f;
-        float elapsedTime = 0f;
-
-        while (elapsedTime < fadeDuration)
+        if (escudoAtual > 0)
         {
-            renderer.color = Color.Lerp(Color.red, originalColor, elapsedTime / fadeDuration);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
+            Debug.Log("INDICAR DANO ESCUDO");
+            renderer.color = Color.blue;
+            yield return new WaitForSeconds(0.3f);
+            float fadeDuration = 0.5f;
+            float elapsedTime = 0f;
 
+            while (elapsedTime < fadeDuration)
+            {
+                renderer.color = Color.Lerp(Color.blue, originalColor, elapsedTime / fadeDuration);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+        }
+        else
+        {
+            Debug.Log("INDICAR DANO VIDA");
+            renderer.color = Color.red;
+            yield return new WaitForSeconds(0.3f);
+            float fadeDuration = 0.5f;
+            float elapsedTime = 0f;
+
+            while (elapsedTime < fadeDuration)
+            {
+                renderer.color = Color.Lerp(Color.red, originalColor, elapsedTime / fadeDuration);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+        }
         renderer.color = originalColor;
     }
 
     private IEnumerator IndicarVida()
     {
+        Debug.Log("INDICAR VIDA");
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
-        Color originalColor = renderer.color;
         renderer.color = Color.green;
         yield return new WaitForSeconds(0.3f);
         float fadeDuration = 0.5f;
@@ -234,6 +246,7 @@ public class Nucleo : MonoBehaviour
         GameObject textoEscudoObj = new GameObject("TextoEscudo");
         textoEscudoObj.transform.SetParent(transform);
         textoEscudoObj.transform.localPosition = new Vector3(0, -0.3f, -0.1f);
+        textoEscudoObj.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
         textoEscudo = textoEscudoObj.AddComponent<TextMeshPro>();
         textoEscudo.alignment = TextAlignmentOptions.Center;
         textoEscudo.fontSize = 14f;

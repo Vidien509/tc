@@ -94,8 +94,6 @@ public class SpawnerInimigos : MonoBehaviour
                 yield return new WaitForSeconds(intervaloSpawn);
             }
         }
-
-        Debug.Log("Todos os inimigos foram instanciados.");
     }
 
     private void CriarInimigo(InimigoTipo tipo, float escala = 1f)

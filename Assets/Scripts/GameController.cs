@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 public class GameController : MonoBehaviour
 {
@@ -56,6 +57,7 @@ public class GameController : MonoBehaviour
     // Adicione uma referência ao texto de recursos especiais
     public TextMeshProUGUI textRecursosEspeciais;
     private Dictionary<Image, Coroutine> corrotinasAtivas = new Dictionary<Image, Coroutine>();
+    private Dictionary<TextMeshProUGUI, Coroutine> corrotinasAtivasTxt = new Dictionary<TextMeshProUGUI, Coroutine>();
 
     public void StartGameController()
     {
@@ -123,7 +125,7 @@ public class GameController : MonoBehaviour
         CriarBotaoUpgrade("Fogo", new Vector2(0, 0), TorreType.Fogo, buttonWidth, buttonHeight, new Color(1, 0.4f, 0));
         CriarBotaoUpgrade("Plasma", new Vector2(0, -45), TorreType.Plasma, buttonWidth, buttonHeight, new Color(0.8f, 0, 1));
 
-        CriarBotaoVender(new Vector2(0, -90), buttonWidth, buttonHeight);
+        CriarBotaoVender(new Vector2(0, -95), buttonWidth, buttonHeight);
         //CriarBotaoUpgradeEspecial(new Vector2(0, -85), buttonWidth, buttonHeight);
 
         menuUpgrade.SetActive(false);
@@ -341,19 +343,6 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private void VenderTorre(Celula cel)
-    {
-        if (cel.getValue() == "0" && cel.GetCellState() != CellState.vazia && cel.GetCellState() != CellState.nucleo)
-        {
-            GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
-            TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
-            text.color = Color.green;
-            text.text = "+ $ " + precoTorre;
-            recurso += precoTorre;
-            cel.SetCellState(CellState.vazia);
-        }
-    }
-
     private void MostrarMensagemRecursosInsuficientes(int custo)
     {
         MostrarMensagemRecursosInsuficientes(custo, "");
@@ -439,7 +428,7 @@ public class GameController : MonoBehaviour
                 TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
                 text.color = Color.green;
                 text.text = "+ $ " + valorVenda;
-
+                cel.transform.Find("TextoNivel").GetComponent<TextMeshPro>().text = "";
                 // Destruir o componente Torre
                 Destroy(torreAtual);
 
@@ -504,7 +493,6 @@ public class GameController : MonoBehaviour
                 // Atualizar o texto do preço
                 TextMeshProUGUI priceText = child.Find("PriceText").GetComponent<TextMeshProUGUI>();
                 int custoUpgrade = precoUpgrade * (torreAtual.nivel + 2);
-
                 if ((isCurrentType && canUpgrade) || (!isCurrentType && torreAtual.tipo == TorreType.Basic))
                 {
                     priceText.text = $"$ {custoUpgrade}";
@@ -532,10 +520,13 @@ public class GameController : MonoBehaviour
                             priceText.color = Color.magenta;
                             text.text = "Upgrade Especial"; // Define o texto para Upgrade Especial
                             text.color = Color.white;
+                            button.interactable = true;
                             Debug.Log("INICIANDO ARCO IRIS BOTÃO: " + child.name);
                         }
                         else if (torreAtual.poderEspecial != PoderEspecial.Nenhum)
                         {
+                            Coroutine novaCorrotina = StartCoroutine(EfeitoArcoIrisTexto(priceText));
+                            corrotinasAtivasTxt[priceText] = novaCorrotina;
                             priceText.text = "MAX";
                         }
                         else
@@ -558,6 +549,15 @@ public class GameController : MonoBehaviour
                         corrotinasAtivas[imagem] = novaCorrotina;
                     }
                 }
+                else if (isCurrentType && torreAtual.poderEspecial != PoderEspecial.Nenhum)
+                {
+
+                    if (!corrotinasAtivasTxt.ContainsKey(priceText))
+                    {
+                        Coroutine novaCorrotina = StartCoroutine(EfeitoArcoIrisTexto(priceText));
+                        corrotinasAtivasTxt[priceText] = novaCorrotina;
+                    }
+                }
                 else
                 {
                     // Parar o efeito se não for o caso especial
@@ -566,6 +566,12 @@ public class GameController : MonoBehaviour
                     {
                         StopCoroutine(corrotina);
                         corrotinasAtivas.Remove(imagem);
+                    }
+
+                    if (corrotinasAtivasTxt.TryGetValue(priceText, out Coroutine corrotina2))
+                    {
+                        StopCoroutine(corrotina2);
+                        corrotinasAtivasTxt.Remove(priceText);
                     }
 
                     imagem.color = new Color(0f, 0f, 0f, 140f / 255f);
@@ -815,16 +821,48 @@ public class GameController : MonoBehaviour
         }
     }
 
+    private IEnumerator EfeitoArcoIrisTexto(TextMeshProUGUI texto)
+    {
+        float h = 0;
+        while (true)
+        {
+            h = (h + Time.deltaTime * 1.5f) % 1f;
+            texto.color = Color.HSVToRGB(h, 1, 1);
+            yield return null;
+        }
+    }
+
     private IEnumerator EfeitoArcoIris(Image imagem)
     {
         float h, s, v;
         Color corBase = imagem.color;
         Color.RGBToHSV(corBase, out h, out s, out v);
 
+        Button botao = imagem.GetComponent<Button>();
+        if (botao == null)
+        {
+            Debug.LogWarning("O efeito arco-íris requer um botão associado à imagem!");
+            yield break;
+        }
+
+        ColorBlock colorBlock = botao.colors;
+
         while (true)
         {
             h = (h + Time.deltaTime * 1.5f) % 1f;
             imagem.color = Color.HSVToRGB(h, 1, 1);
+
+            Color novaCor = Color.HSVToRGB(h, 1, 1);
+
+            // Atualiza as cores do ColorBlock
+            colorBlock.normalColor = novaCor * 0.5f;
+            colorBlock.highlightedColor = novaCor; // Levemente mais claro no highlight
+            colorBlock.pressedColor = novaCor * 3f;    // Levemente mais escuro no pressionado
+            colorBlock.selectedColor = novaCor;          // Mantém a mesma cor no selecionado
+            colorBlock.disabledColor = novaCor * 0.5f;   // Mais opaco no desativado
+
+            botao.colors = colorBlock;
+
             yield return null;
         }
     }
