@@ -31,6 +31,7 @@ public class Torre : MonoBehaviour
     private float bloomIntensity = 1.5f;
     private Material bloomMaterial;
     Color originalColor;
+    Vector3 originalScale;
 
     private void Awake()
     {
@@ -49,6 +50,7 @@ public class Torre : MonoBehaviour
     {
         SpriteRenderer spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         originalColor = spriteRenderer.color;
+        originalScale = transform.localScale;
 
         AtualizarAtributos();
         StartCoroutine(AtaqueContinuo());
@@ -227,7 +229,6 @@ public class Torre : MonoBehaviour
         Color shootColor = GetTowerColor();
         shootColor.a = 0.7f; // Ajuste a transparência aqui
 
-        Vector3 originalScale = transform.localScale;
         Vector3 targetScale = originalScale * 1.1f; // Reduzido de 1.2f para 1.1f para um efeito mais suave
 
         float elapsed = 0f;

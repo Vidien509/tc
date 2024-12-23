@@ -310,6 +310,9 @@ public class GameController : MonoBehaviour
                 if (celulaTorre != null)
                 {
                     celulaTorre.AtivarEfeitoEspecial(torreAtual.tipo);
+                    celulaTorre.AnimarUpgrade();
+                    AtualizarBotoesUpgrade(); // Atualiza os botões após o upgrade
+                    FecharMenu();
                 }
             }
             else
@@ -318,14 +321,21 @@ public class GameController : MonoBehaviour
                 if (recurso >= custoUpgrade)
                 {
                     recurso -= custoUpgrade;
+                    Celula celulaTorre = torreAtual.GetComponent<Celula>();
                     if (torreAtual.tipo == novoTipo)
                     {
                         {
+
+                            if (celulaTorre != null)
+                            {
+                                celulaTorre.AnimarUpgrade();
+                            }
                             torreAtual.Upgrade();
                         }
                     }
                     else
                     {
+                        celulaTorre.AnimarUpgrade();
                         torreAtual.SetTorreType(novoTipo);
                     }
                     GameObject textoPopupI = Instantiate(textoPopup, torreAtual.transform.position, Quaternion.identity);
@@ -334,10 +344,12 @@ public class GameController : MonoBehaviour
                     text.text = "Upgrade! - $ " + custoUpgrade;
                     atualizaTextRecursos();
                     AtualizarBotoesUpgrade(); // Atualiza os botões após o upgrade
+                    FecharMenu();
                 }
                 else
                 {
                     MostrarMensagemRecursosInsuficientes(custoUpgrade);
+                    FecharMenu();
                 }
             }
         }

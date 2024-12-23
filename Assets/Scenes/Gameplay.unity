@@ -8281,9 +8281,9 @@ MonoBehaviour:
   pontoSpawn: {fileID: 337710698}
   raioSpawn: 3
   textoContagemInimigos: {fileID: 1956026322}
-  inimigosVivos: 0
   gameLoop: {fileID: 1694064914}
   faseBoss: 0
+  bossVivos: 0
 --- !u!1 &1694208206
 GameObject:
   m_ObjectHideFlags: 0

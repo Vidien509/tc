@@ -2,6 +2,7 @@
 using TMPro;
 using System;
 using System.Collections;
+using CodeMonkey.Utils;
 
 public enum CellState { vazia, torre, nucleo }
 
@@ -26,9 +27,17 @@ public class Celula : MonoBehaviour
 
     private Material materialEspecial;
     private bool efeitoEspecialAtivo = false;
+    private Vector3 escalaOriginal;
+    private Material materialOriginal;
+    private GameObject upgradePopup;
+
+    private SpriteRenderer spriteRenderer;
+    private Material glowMaterial;
 
     void Awake()
     {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        glowMaterial = new Material(Shader.Find("Sprites/Default"));
         SetupBorderRenderer();
         SetupTorreVisual();
     }
@@ -36,7 +45,11 @@ public class Celula : MonoBehaviour
     void Start()
     {
         // Crie o material para o efeito especial
+        escalaOriginal = transform.localScale;
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        materialOriginal = spriteRenderer.material;
         materialEspecial = new Material(Shader.Find("Sprites/Default"));
+        upgradePopup = Resources.Load<GameObject>("Prefabs/Upgrade");
     }
 
     private void SetupBorderRenderer()
@@ -321,28 +334,6 @@ public class Celula : MonoBehaviour
         return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f));
     }
 
-
-    public void HighlightCell()
-    {
-        // Store the current text
-        string currentText = transform.GetChild(0).GetComponent<TextMeshPro>().text;
-
-        // Clear the text temporarily
-        transform.GetChild(0).GetComponent<TextMeshPro>().text = "";
-
-        // Store this information to use when unhighlighting
-        transform.GetChild(0).GetComponent<TextMeshPro>().SetText(currentText);
-    }
-
-    public void UnhighlightCell()
-    {
-        // Restore the text
-        transform.GetChild(0).GetComponent<TextMeshPro>().text = transform.GetChild(0).GetComponent<TextMeshPro>().text;
-
-        // Update visuals
-        UpdateCellVisuals();
-    }
-
     public void AtivarEfeitoEspecial(TorreType tipo)
     {
         efeitoEspecialAtivo = true;
@@ -365,10 +356,55 @@ public class Celula : MonoBehaviour
         }
     }
 
+    public void AnimarUpgrade()
+    {
+        StartCoroutine(AnimacaoUpgrade());
+    }
+
+    private IEnumerator AnimacaoUpgrade()
+    {
+        float duracao = 0.5f;
+        float tempoDecorrido = 0f;
+        Vector3 escalaOriginal = transform.localScale;
+        Vector3 escalaAlvo = escalaOriginal * 1.2f;
+        Instantiate(upgradePopup, transform.position, Quaternion.identity);
+
+        // Criar um material de brilho
+        Material glowMaterial = new Material(Shader.Find("Sprites/Default"));
+        glowMaterial.SetColor("_Color", Color.white);
+        glowMaterial.SetFloat("_EmissionPower", 2f);
+
+        while (tempoDecorrido < duracao)
+        {
+            tempoDecorrido += Time.deltaTime;
+            float progresso = tempoDecorrido / duracao;
+
+            // Aumenta a escala
+            transform.localScale = Vector3.Lerp(escalaOriginal, escalaAlvo, progresso);
+
+            // Altera a cor e o brilho
+            Color corAtual = Color.Lerp(Color.white, Color.yellow, progresso);
+            glowMaterial.SetColor("_Color", corAtual);
+            spriteRenderer.material = glowMaterial;
+
+            if (progresso >= 0.5f)
+            {
+                // Começa a diminuir a escala de volta ao normal
+                transform.localScale = Vector3.Lerp(escalaAlvo, escalaOriginal, (progresso - 0.5f) * 2f);
+            }
+
+            yield return null;
+        }
+
+        // Restaura o material original
+        spriteRenderer.material = materialOriginal;
+        transform.localScale = escalaOriginal;
+    }
+
+
     private IEnumerator EfeitoArcoIris(Color corPredominante)
     {
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
-        Material materialOriginal = spriteRenderer.material;
         spriteRenderer.material = materialEspecial;
 
         float h, s, v;
