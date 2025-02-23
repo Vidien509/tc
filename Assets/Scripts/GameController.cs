@@ -59,6 +59,20 @@ public class GameController : MonoBehaviour
     private Dictionary<Image, Coroutine> corrotinasAtivas = new Dictionary<Image, Coroutine>();
     private Dictionary<TextMeshProUGUI, Coroutine> corrotinasAtivasTxt = new Dictionary<TextMeshProUGUI, Coroutine>();
 
+    // Sons
+    public AudioSource audioSource;
+    public AudioClip buySound;
+    public AudioClip errorSound;
+    public AudioClip upgradeSound;
+    public AudioClip upgradeEspecialSound;
+    public AudioClip hoverSound;
+    public AudioClip shotSound;
+
+    public int mffCost = 50;
+
+    private GameObject menuSelecao;
+    private Celula celulaAtual;
+
     public void StartGameController()
     {
         jogoIniciado = true;
@@ -73,7 +87,8 @@ public class GameController : MonoBehaviour
         GameObject gridObject = new GameObject("Grid");
         gameGrid = gridObject.AddComponent<Grid>();
         gameGrid.InitializeGrid(14, 10, 4f, new Vector3(-30, -20, 0), cellPrefab, this.transform);
-
+        gameGrid.audioSource = audioSource;
+        gameGrid.hoverSound = hoverSound;
         gameGrid.SetRecursosAleatorios();
 
         if (!ColorUtility.TryParseHtmlString(corSelecionadaHex, out corSelecionada))
@@ -83,6 +98,7 @@ public class GameController : MonoBehaviour
 
         CriarMenuUpgrade();
         CriarMenuUpgradeNucleo();
+        CriarMenuSelecao();
     }
 
     private void CriarMenuUpgrade()
@@ -225,6 +241,23 @@ public class GameController : MonoBehaviour
         textComponent.alignment = TextAlignmentOptions.Center;
     }
 
+    private void AbrirMenuSelecao(Celula cel)
+    {
+        celulaAtual = cel;
+        menuSelecao.SetActive(true);
+        Vector3 posicaoMundo = cel.transform.position + new Vector3(0, 1f, 0);
+        Vector3 posicaoTela = Camera.main.WorldToScreenPoint(posicaoMundo);
+        menuSelecao.transform.Find("MenuContent").position = posicaoTela;
+        menuAberto = true;
+    }
+
+    private void FecharMenuSelecao()
+    {
+        menuSelecao.SetActive(false);
+        menuAberto = false;
+        celulaAtual = null;
+    }
+
     private void Update()
     {
         if (jogoIniciado && !gameLoop.faseRespondendo && !menuAberto)
@@ -238,7 +271,7 @@ public class GameController : MonoBehaviour
                 {
                     if (cel.GetCellState() == CellState.vazia)
                     {
-                        ComprarTorre(cel);
+                        AbrirMenuSelecao(cel);
                     }
                     else if (cel.GetCellState() == CellState.torre)
                     {
@@ -256,11 +289,38 @@ public class GameController : MonoBehaviour
         {
             FecharMenu();
             FecharMenuNucleo();
+            FecharMenuSelecao();
         }
     }
 
-    private void ComprarTorre(Celula cel)
+    private void ComprarMFF()
     {
+        CellState cellState = CellState.campoMultiplicacao;
+        stateMenuSelecionado = cellState;
+        if (recurso >= mffCost)
+        {
+            GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
+            TextMeshPro text = textoPopupI.transform.GetComponent<TextMeshPro>();
+            text.color = Color.red;
+            text.text = "- $ " + mffCost;
+            recurso -= mffCost;
+            mffCost += gameLoop.fase;
+            celulaAtual.SetCellState(stateMenuSelecionado);
+            audioSource.PlayOneShot(buySound, 0.2f);
+            FecharMenuSelecao();
+        }
+        else
+        {
+            MostrarMensagemRecursosInsuficientes(mffCost);
+            audioSource.PlayOneShot(errorSound, 0.2f);
+            FecharMenuSelecao();
+        }
+    }
+
+    private void ComprarTorre()
+    {
+        CellState cellState = CellState.torre;
+        stateMenuSelecionado = cellState;
         if (recurso >= precoTorre)
         {
             GameObject textoPopupI = Instantiate(textoPopup, UtilsClass.GetMouseWorldPosition(), Quaternion.identity);
@@ -269,12 +329,17 @@ public class GameController : MonoBehaviour
             text.text = "- $ " + precoTorre;
             recurso -= precoTorre;
             precoTorre += gameLoop.fase;
-            cel.SetCellState(stateMenuSelecionado);
+            celulaAtual.SetCellState(stateMenuSelecionado);
+            audioSource.PlayOneShot(buySound, 0.2f);
+            FecharMenuSelecao();
         }
         else
         {
             MostrarMensagemRecursosInsuficientes(precoTorre);
+            audioSource.PlayOneShot(errorSound, 0.2f);
+            FecharMenuSelecao();
         }
+
     }
 
     private void AbrirMenuUpgrade(Celula cel)
@@ -314,6 +379,7 @@ public class GameController : MonoBehaviour
                     AtualizarBotoesUpgrade(); // Atualiza os botões após o upgrade
                     FecharMenu();
                 }
+                audioSource.PlayOneShot(upgradeSound, 0.2f);
             }
             else
             {
@@ -345,11 +411,13 @@ public class GameController : MonoBehaviour
                     atualizaTextRecursos();
                     AtualizarBotoesUpgrade(); // Atualiza os botões após o upgrade
                     FecharMenu();
+                    audioSource.PlayOneShot(buySound, 0.2f);
                 }
                 else
                 {
                     MostrarMensagemRecursosInsuficientes(custoUpgrade);
                     FecharMenu();
+                    audioSource.PlayOneShot(errorSound, 0.2f);
                 }
             }
         }
@@ -376,19 +444,6 @@ public class GameController : MonoBehaviour
             text.color = Color.magenta;
             text.text = custo + " $$ Recursos Especiais insuficientes!";
         }
-    }
-
-    public void SetStateMenuSelecionado(string opcao)
-    {
-        CellState cellState = CellState.torre;
-        switch (opcao)
-        {
-            case "torre":
-                cellState = CellState.torre;
-                break;
-        }
-
-        stateMenuSelecionado = cellState;
     }
 
     private void atualizaTextRecursos()
@@ -593,6 +648,101 @@ public class GameController : MonoBehaviour
         }
     }
 
+    private void CriarMenuSelecao()
+    {
+        menuSelecao = new GameObject("MenuSelecao");
+        menuSelecao.transform.SetParent(transform);
+        Canvas canvas = menuSelecao.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;
+
+        CanvasScaler scaler = menuSelecao.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+
+        GraphicRaycaster raycaster = menuSelecao.AddComponent<GraphicRaycaster>();
+
+        RectTransform rectTransform = menuSelecao.GetComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0, 0);
+        rectTransform.anchorMax = new Vector2(1, 1);
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+
+        Image background = menuSelecao.AddComponent<Image>();
+        background.color = new Color(0, 0, 0, 0.5f);
+
+        GameObject menuContent = new GameObject("MenuContent");
+        menuContent.transform.SetParent(menuSelecao.transform, false);
+        RectTransform contentRect = menuContent.AddComponent<RectTransform>();
+        contentRect.anchorMin = new Vector2(0.5f, 0.5f);
+        contentRect.anchorMax = new Vector2(0.5f, 0.5f);
+        contentRect.sizeDelta = new Vector2(200, 100);
+
+        Image contentBackground = menuContent.AddComponent<Image>();
+        contentBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.9f);
+
+        float buttonWidth = 160f;
+        float buttonHeight = 30f;
+
+        CriarBotaoSelecao("Torre", new Vector2(0, 20), buttonWidth, buttonHeight, Color.white, ComprarTorre);
+        CriarBotaoSelecao("Multiplicar X2", new Vector2(0, -20), buttonWidth, buttonHeight, Color.cyan, ComprarMFF);
+
+        menuSelecao.SetActive(false);
+
+        Button backgroundButton = background.gameObject.AddComponent<Button>();
+        backgroundButton.onClick.AddListener(FecharMenuSelecao);
+    }
+
+    private void CriarBotaoSelecao(string texto, Vector2 posicao, float largura, float altura, Color cor, UnityEngine.Events.UnityAction acao)
+    {
+        Color corBack = new Color(0f, 0f, 0f, 140f / 255f);
+        GameObject botao = new GameObject("Comprar" + texto);
+        botao.transform.SetParent(menuSelecao.transform.Find("MenuContent"), false);
+        RectTransform rectTransform = botao.AddComponent<RectTransform>();
+        rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        rectTransform.anchoredPosition = posicao;
+        rectTransform.sizeDelta = new Vector2(largura, altura);
+
+        Image imagem = botao.AddComponent<Image>();
+        imagem.color = corBack;
+
+        Button button = botao.AddComponent<Button>();
+        button.onClick.AddListener(acao);
+
+        ColorBlock cores = button.colors;
+        cores.normalColor = corBack;
+        cores.highlightedColor = new Color(corBack.r * 1.2f, corBack.g * 1.2f, corBack.b * 1.2f);
+        cores.pressedColor = new Color(corBack.r * 0.8f, corBack.g * 0.8f, corBack.b * 0.8f);
+        button.colors = cores;
+
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(botao.transform, false);
+        RectTransform textRectTransform = textObj.AddComponent<RectTransform>();
+        textRectTransform.anchorMin = new Vector2(0, 0);
+        textRectTransform.anchorMax = new Vector2(1, 1);
+        textRectTransform.offsetMin = new Vector2(5, 0);
+        textRectTransform.offsetMax = new Vector2(-25, 0);
+
+        TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
+        textComponent.text = texto;
+        textComponent.color = cor;
+        textComponent.fontSize = 14;
+        textComponent.alignment = TextAlignmentOptions.Left;
+
+        GameObject priceObj = new GameObject("PriceText");
+        priceObj.transform.SetParent(botao.transform, false);
+        RectTransform priceRectTransform = priceObj.AddComponent<RectTransform>();
+        priceRectTransform.anchorMin = new Vector2(1, 0);
+        priceRectTransform.anchorMax = new Vector2(1, 1);
+        priceRectTransform.offsetMin = new Vector2(-60, 0);
+        priceRectTransform.offsetMax = new Vector2(-5, 0);
+
+        TextMeshProUGUI priceComponent = priceObj.AddComponent<TextMeshProUGUI>();
+        priceComponent.color = cor;
+        priceComponent.fontSize = 12;
+        priceComponent.alignment = TextAlignmentOptions.Right;
+    }
 
     private void CriarMenuUpgradeNucleo()
     {
@@ -751,10 +901,12 @@ public class GameController : MonoBehaviour
                 text.text = "Upgrade " + tipoUpgrade + "! - $ " + custoUpgrade;
                 atualizaTextRecursos();
                 AtualizarBotoesUpgradeNucleo();
+                audioSource.PlayOneShot(upgradeSound, 0.2f);
             }
             else
             {
                 MostrarMensagemRecursosInsuficientes(custoUpgrade);
+                audioSource.PlayOneShot(errorSound, 0.2f);
             }
         }
     }

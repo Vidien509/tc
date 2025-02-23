@@ -46,7 +46,6 @@ public class Inimigo : MonoBehaviour
 
     private bool estaMorrendo = false;
 
-    // Adicione uma referência ao GameLoop
     private GameLoop gameLoop;
 
     private SpriteRenderer spriteRenderer;

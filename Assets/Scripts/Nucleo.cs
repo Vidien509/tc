@@ -30,6 +30,7 @@ public class Nucleo : MonoBehaviour
     private TextMeshPro textoVida;
     private TextMeshPro textoEscudo;
     private TextMeshPro textoNivel;
+    private GameLoop gameLoop;
 
     // Atributos para upgrades
     public int nivelVidaMaxima;
@@ -68,7 +69,7 @@ public class Nucleo : MonoBehaviour
         nivelEscudo = 0;
         nivelFortificacao = 0;
         escudoAtual = 0f;
-
+        gameLoop = FindObjectOfType<GameLoop>();
         bloomMaterial = new Material(Shader.Find("Hidden/BloomShader"));
         bloomMaterial.SetFloat("_BloomIntensity", bloomIntensity);
 
@@ -120,6 +121,7 @@ public class Nucleo : MonoBehaviour
             if (vida <= 0)
             {
                 Debug.Log("O n�cleo foi destru�do!");
+                gameLoop.processaGameOver(false);
                 Destroy(gameObject);
             }
             else

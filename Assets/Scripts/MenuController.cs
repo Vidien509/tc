@@ -9,12 +9,14 @@ public class MenuController : MonoBehaviour
 
     public Transform naturais;
 
+    [System.Obsolete]
     void Start()
     {
         painelPrincipal.active = true;
         painelRecursos.active = true;
     }
 
+    [System.Obsolete]
     public void TrocaMenu() {
         if (painelPrincipal.active == true) {
             painelPrincipal.active = false;

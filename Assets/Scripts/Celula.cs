@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using CodeMonkey.Utils;
 
-public enum CellState { vazia, torre, nucleo }
+public enum CellState { vazia, torre, nucleo, campoMultiplicacao}
 
 public class Celula : MonoBehaviour
 {
@@ -115,6 +115,10 @@ public class Celula : MonoBehaviour
                 if (GetComponent<Nucleo>() == null)
                     gameObject.AddComponent<Nucleo>();
                 break;
+            case CellState.campoMultiplicacao:
+                if (GetComponent<CampoMultiplicacao>() == null)
+                    gameObject.AddComponent<CampoMultiplicacao>();
+                break;
         }
     }
 
@@ -195,6 +199,10 @@ public class Celula : MonoBehaviour
                     corBorda = Color.green;
                     Debug.LogError("Erro ao converter a cor hexadecimal para núcleo!");
                 }
+                torreVisual.SetActive(false);
+                break;
+            case CellState.campoMultiplicacao:
+                corBorda = Color.cyan;
                 torreVisual.SetActive(false);
                 break;
             default:

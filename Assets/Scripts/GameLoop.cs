@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using UnityEngine.SceneManagement;
 
 public class GameLoop : MonoBehaviour
 {
@@ -23,6 +24,11 @@ public class GameLoop : MonoBehaviour
     public GameObject textoQuestao;
     public GameObject nivelQuestao;
 
+    public GameObject painelGameOver;
+    public TextMeshProUGUI gameOverPontos;
+    public TextMeshProUGUI gameOverTitulo;
+    public bool gameObjer;
+
     public GameObject textoPopup;
     public GameController gameController;
 
@@ -31,6 +37,7 @@ public class GameLoop : MonoBehaviour
     public TextMeshProUGUI textTempoJogo;
 
     public TextMeshProUGUI textRespCorreta;
+    public static bool tutorialMostrado = false;
 
     private int _fase;
     public int fase
@@ -73,6 +80,12 @@ public class GameLoop : MonoBehaviour
 
     public int multInimigos;
 
+    private void Start()
+    {
+        painelTut1.SetActive(true);
+        painelGameOver.SetActive(false);
+    }
+
     void StartGameLoop()
     {
         multInimigos = 5;
@@ -96,49 +109,68 @@ public class GameLoop : MonoBehaviour
 
     void Update()
     {
-        if (jogoIniciado)
+        if (!gameObjer)
         {
-            tempoCiclo += Time.deltaTime;
-
-            if (faseRespondendo)
+            if (jogoIniciado)
             {
-                // Fase de responder perguntas
-                tempoQuestao += Time.deltaTime;
-                if (Input.GetKeyDown(KeyCode.Return) && !respostaProcessada)
+                tempoCiclo += Time.deltaTime;
+
+                if (faseRespondendo)
                 {
-                    ProcessarResposta();
+                    // Fase de responder perguntas
+                    tempoQuestao += Time.deltaTime;
+                    if (Input.GetKeyDown(KeyCode.Return) && !respostaProcessada)
+                    {
+                        ProcessarResposta();
+                    }
+
+                    // Adicione esta verificação para manter o foco
+                    if (!inputField.isFocused)
+                    {
+                        inputField.ActivateInputField();
+                    }
+
+                    if (tempoCiclo >= questionTime)
+                    {
+                        // Finaliza a fase de responder perguntas
+                        FinalizarFaseRespondendo();
+                    }
+                }
+                else if (inPreparationPhase)
+                {
+                    if (tempoCiclo >= preparationTime)
+                    {
+                        // Finaliza a fase de preparação e inicia o combate
+                        FinalizarFasePreparacao();
+                    }
+                }
+                else
+                {
+                    // Fase de combate
+                    if (tempoCiclo >= periodoCiclo || spawner.inimigosVivos <= 0)
+                    {
+                        FinalizarFaseCombate();
+                    }
                 }
 
-                // Adicione esta verificação para manter o foco
-                if (!inputField.isFocused)
-                {
-                    inputField.ActivateInputField();
-                }
+                atualizaTextTempoJogo();
+            }
+        }
+    }
 
-                if (tempoCiclo >= questionTime)
-                {
-                    // Finaliza a fase de responder perguntas
-                    FinalizarFaseRespondendo();
-                }
-            }
-            else if (inPreparationPhase)
-            {
-                if (tempoCiclo >= preparationTime)
-                {
-                    // Finaliza a fase de preparação e inicia o combate
-                    FinalizarFasePreparacao();
-                }
-            }
-            else
-            {
-                // Fase de combate
-                if (tempoCiclo >= periodoCiclo || spawner.inimigosVivos <= 0)
-                {
-                    FinalizarFaseCombate();
-                }
-            }
-
-            atualizaTextTempoJogo();
+    public void processaGameOver(bool win)
+    {
+        painelGameOver.SetActive(true);
+        gameOverPontos.text = "Pontos: " + pontos.ToString();
+        btnProximo.SetActive(true);
+        btnProximo.GetComponentInChildren<TextMeshProUGUI>().text = "Jogar Novamente";
+        if (win)
+        {
+            gameOverTitulo.text = "VITÓRIA!!";
+        }
+        else
+        {
+            gameOverTitulo.text = "GAME OVER";
         }
     }
 
@@ -290,6 +322,8 @@ public class GameLoop : MonoBehaviour
     {
         textTempoJogo.text = tempoCiclo.ToString("F2");
     }
+
+    [System.Obsolete]
     public void proximoTutorial()
     {
         if (painelTut1.active)
@@ -313,9 +347,15 @@ public class GameLoop : MonoBehaviour
             painelTut4.SetActive(false);
             btnProximo.SetActive(false);
             StartGameLoop();
+            tutorialMostrado = true;
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            btnProximo.SetActive(false);
         }
     }
-        
+    
     private void IniciarFaseCombate()
     {
         if(fase >= 6)

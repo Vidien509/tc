@@ -33,6 +33,8 @@ public class Torre : MonoBehaviour
     Color originalColor;
     Vector3 originalScale;
 
+    GameController gameController;
+
     private void Awake()
     {
         if (prefabProjetil == null)
@@ -60,6 +62,7 @@ public class Torre : MonoBehaviour
         // Create bloom material
         bloomMaterial = new Material(Shader.Find("Hidden/BloomShader"));
         bloomMaterial.SetFloat("_BloomIntensity", bloomIntensity);
+        gameController = FindObjectOfType<GameController>();
     }
 
     void Update()
@@ -185,6 +188,7 @@ public class Torre : MonoBehaviour
 
     void LancarProjetil(Transform alvo)
     {
+        gameController.audioSource.PlayOneShot(gameController.shotSound, 0.1f);
         GameObject projetil = Instantiate(prefabProjetil, transform.position, Quaternion.identity);
         Projetil scriptProjetil = projetil.GetComponent<Projetil>();
         if (scriptProjetil != null)

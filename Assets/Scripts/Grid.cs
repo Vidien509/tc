@@ -16,6 +16,10 @@ public class Grid : MonoBehaviour
 
     private TextMesh[,] debugTextArray;
 
+    // Sons
+    public AudioSource audioSource;
+    public AudioClip hoverSound;
+
     public void InitializeGrid(int width, int height, float cellSize, Vector3 originPosition, GameObject cellPrefab, Transform originTransform)
     {
         this.width = width;
@@ -150,6 +154,8 @@ public class Grid : MonoBehaviour
                 ultimaCelulaHigh.UpdateCellVisuals();
             }
             ultimaCelulaHigh = cel;
+
+            audioSource.PlayOneShot(hoverSound, 0.2f);
         }
         else if (ultimaCelulaHigh)
         {
