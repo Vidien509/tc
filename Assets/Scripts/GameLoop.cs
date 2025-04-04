@@ -27,10 +27,15 @@ public class GameLoop : MonoBehaviour
     public GameObject painelGameOver;
     public TextMeshProUGUI gameOverPontos;
     public TextMeshProUGUI gameOverTitulo;
-    public bool gameObjer;
+    public bool gameOver;
 
     public GameObject textoPopup;
     public GameController gameController;
+    public bool respostaCorreta;
+    public bool powerUpAtivado;
+    public bool powerUpConcedido;
+    public int codigoBonusConcedido;
+    public float tempoPowerUp;
 
     public TextMeshProUGUI textFase;
     public TextMeshProUGUI textPontos;
@@ -88,6 +93,11 @@ public class GameLoop : MonoBehaviour
 
     void StartGameLoop()
     {
+        powerUpConcedido = false;
+        codigoBonusConcedido = -1;
+        gameOver = false;
+        powerUpAtivado = false;
+        tempoPowerUp = 0f;
         multInimigos = 5;
         jogoIniciado = true;
         periodoCiclo = 30;
@@ -109,7 +119,7 @@ public class GameLoop : MonoBehaviour
 
     void Update()
     {
-        if (!gameObjer)
+        if (!gameOver && !powerUpAtivado)
         {
             if (jogoIniciado)
             {
@@ -156,10 +166,27 @@ public class GameLoop : MonoBehaviour
                 atualizaTextTempoJogo();
             }
         }
+
+        if (powerUpConcedido)
+        {
+            tempoPowerUp += Time.deltaTime;
+            if(tempoPowerUp >= 10f)
+            {
+                powerUpConcedido = false;
+                if (codigoBonusConcedido == 3) {
+                    Inimigo[] inimigos = FindObjectsOfType<Inimigo>();
+                    foreach (Inimigo inimigo in inimigos)
+                    {
+                        inimigo.velocidade = inimigo.velocidadeBase;
+                    }
+                }
+            }
+        }
     }
 
     public void processaGameOver(bool win)
     {
+        gameOver = true;
         painelGameOver.SetActive(true);
         gameOverPontos.text = "Pontos: " + pontos.ToString();
         btnProximo.SetActive(true);
@@ -174,8 +201,9 @@ public class GameLoop : MonoBehaviour
         }
     }
 
-    private void iniciarNovaQuestao()
+    public void iniciarNovaQuestao()
     {
+        respostaCorreta = false;
         menuQuestao.SetActive(true);
         inputField.text = ""; // Limpa o campo de entrada
         TextMeshProUGUI textoQ = textoQuestao.GetComponent<TextMeshProUGUI>();
@@ -213,8 +241,16 @@ public class GameLoop : MonoBehaviour
             textRC.text = "PERFEITO!  2X";
 
             text.color = Color.green;
-            text.text = "+ $ 20";
-            gameController.recurso += 20;
+            if (codigoBonusConcedido == 7 && powerUpConcedido)
+            {
+                text.text = "+ $ 80";
+                gameController.recurso += 80;
+            }
+            else
+            {
+                text.text = "+ $ 20";
+                gameController.recurso += 20;
+            }
         }
         else if (tempoQuestao <= 2.5f)
         {
@@ -226,8 +262,16 @@ public class GameLoop : MonoBehaviour
             textRC.text = "EXCELENTE!  1.5X";
 
             text.color = Color.green;
-            text.text = "+ $ 15";
-            gameController.recurso += 15;
+            if (codigoBonusConcedido == 7 && powerUpConcedido)
+            {
+                text.text = "+ $ 60";
+                gameController.recurso += 60;
+            }
+            else
+            {
+                text.text = "+ $ 15";
+                gameController.recurso += 15;
+            }
         }
         else if (tempoQuestao > 2.5f)
         {
@@ -239,8 +283,16 @@ public class GameLoop : MonoBehaviour
             textRC.text = "CORRETO!";
 
             text.color = Color.green;
-            text.text = "+ $ 10";
-            gameController.recurso += 10;
+            if (codigoBonusConcedido == 7 && powerUpConcedido)
+            {
+                text.text = "+ $ 40";
+                gameController.recurso += 40;
+            }
+            else
+            {
+                text.text = "+ $ 10";
+                gameController.recurso += 10;
+            }
         }
     }
 
@@ -370,15 +422,27 @@ public class GameLoop : MonoBehaviour
         menuQuestao.SetActive(false);
     }
 
-    private void ProcessarResposta()
+    public void ProcessarResposta() {
+        ProcessarResposta(true);
+    }
+
+    public void ProcessarResposta(bool novaQuestao)
     {
         respostaProcessada = true;
         if (verificarResposta(inputField.text))
         {
+            respostaCorreta = true;
             processarRespostaCorreta(tempoQuestao);
         }
-        iniciarNovaQuestao();
-        inputField.ActivateInputField(); // Adicione esta linha
+        if (novaQuestao)
+        {
+            iniciarNovaQuestao();
+            inputField.ActivateInputField();
+        }
+        else
+        {
+            menuQuestao.SetActive(false);
+        }
     }
 
     private void FinalizarFaseRespondendo()
@@ -410,6 +474,29 @@ public class GameLoop : MonoBehaviour
     {
         spawner.bossVivos--;
         gameController.recursosEspeciais++;
+    }
+    //public bool powerUpAtivado;
+    //public bool powerUpConcedido;
+    //public int codigoBonusConcedido;
+    //public float tempoPowerUp;
+
+    public bool getPowerUpAtivado()
+    {
+        return powerUpAtivado;
+    }
+    public bool getPowerUpConcedido()
+    {
+        return powerUpConcedido;
+    }
+
+    public int getCodigoBonusConcedido()
+    {
+        return codigoBonusConcedido;
+    }
+
+    public float getTempoPowerUp()
+    {
+        return tempoPowerUp;
     }
 }
 

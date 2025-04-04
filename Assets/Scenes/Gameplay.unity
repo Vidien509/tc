@@ -8877,6 +8877,7 @@ MonoBehaviour:
   upgradeEspecialSound: {fileID: 8300000, guid: a4b77ceeec9cbb74e965c8bdab3a4270, type: 3}
   hoverSound: {fileID: 8300000, guid: 1e7a587164fcbef45b40536469e6c432, type: 3}
   shotSound: {fileID: 8300000, guid: 2e1f6f6f8f4cf9d4bbcf6ce679b75f7a, type: 3}
+  powerUpSound: {fileID: 8300000, guid: 25f2aaae48f2ac64087f73793c9ae650, type: 3}
   mffCost: 50
 --- !u!114 &1694064913
 MonoBehaviour:
@@ -8925,9 +8926,14 @@ MonoBehaviour:
   painelGameOver: {fileID: 1522328475}
   gameOverPontos: {fileID: 1590276561}
   gameOverTitulo: {fileID: 1231578290}
-  gameObjer: 0
+  gameOver: 0
   textoPopup: {fileID: 3781433772104376586, guid: 6e258e4e6aaba4f4c96bb7e2d6442b51, type: 3}
   gameController: {fileID: 0}
+  respostaCorreta: 0
+  powerUpAtivado: 0
+  powerUpConcedido: 0
+  codigoBonusConcedido: 0
+  tempoPowerUp: 0
   textFase: {fileID: 1306415048}
   textPontos: {fileID: 972811565}
   textTempoJogo: {fileID: 249259853}
@@ -9966,8 +9972,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 30
-  m_fontSizeBase: 30
+  m_fontSize: 0
+  m_fontSizeBase: 0
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

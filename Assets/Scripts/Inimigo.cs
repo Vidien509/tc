@@ -1,6 +1,7 @@
 ﻿using CodeMonkey.Utils;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using TMPro;
 using UnityEngine;
 
@@ -19,7 +20,7 @@ public class Inimigo : MonoBehaviour
     private Nucleo nucleoAlvo;
     private int vidaBase = 5;
     private int vidaMaxima;
-    private int vida;
+    public int vida;
     private int fase;
     private bool temEscudo = false;
     private float tempoUltimoAtaqueDistancia = 0f;
@@ -45,7 +46,7 @@ public class Inimigo : MonoBehaviour
     private const float spawnInterval = 2f;
 
     private bool estaMorrendo = false;
-
+    public GameObject powerUp;
     private GameLoop gameLoop;
 
     private SpriteRenderer spriteRenderer;
@@ -462,6 +463,16 @@ public class Inimigo : MonoBehaviour
     {
         if (estaMorrendo) return;
 
+        if(gameLoop.codigoBonusConcedido == 0 && gameLoop.powerUpConcedido)
+        {
+            dano += Mathf.FloorToInt(dano * 0.2f); // Power up +20% de dano
+        }
+
+        if (gameLoop.codigoBonusConcedido == 6 && gameLoop.powerUpConcedido)
+        {
+            dano += Mathf.FloorToInt(dano * 0.2f);
+        }
+
         if (tipo == InimigoTipo.PlasmaResistente && dano > 0)
         {
             dano = Mathf.Max(1, dano / 2);
@@ -472,12 +483,45 @@ public class Inimigo : MonoBehaviour
             dano = Mathf.Max(1, dano / 2);
             temEscudo = false;
         }
+        int randomValue = Random.Range(0, 10);
+        bool critico = false;
+        if (gameLoop.codigoBonusConcedido == 6 && gameLoop.powerUpConcedido)
+        {
+            if(randomValue <= 1)
+            {
+                dano *= 3;
+                critico = true;
+            }
+        }
+
+        if (critico)
+        {
+            GameObject textoPopupI = Instantiate(gameLoop.textoPopup, new Vector3(-1f, 10f, 0), Quaternion.identity, transform);
+            TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
+            text.fontSize = 14;
+            text.color = Color.yellow;
+            text.text = "" + dano;
+        }
+        else
+        {
+            GameObject textoPopupI = Instantiate(gameLoop.textoPopup, transform.position, Quaternion.identity, transform);
+            textoPopupI.transform.position = new Vector3(0f, 10f, 0f);
+            TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
+            text.fontSize = 8;
+            text.color = Color.white;
+            text.text = "" + dano;
+        }
 
         vida -= dano;
         AtualizarBarraDeVida();
-        ShowHitEffect();
+        ShowHitEffect(critico);
+
         if (vida <= 0)
         {
+            if (Random.value <= 0.5f) // 10% de chance
+            {
+                Instantiate(powerUp, transform.position, Quaternion.identity);
+            }
             if (tipo == InimigoTipo.Divisivel)
             {
                 Dividir();
@@ -524,7 +568,7 @@ public class Inimigo : MonoBehaviour
         ShowFireEffect();
     }
 
-    private void ShowHitEffect()
+    private void ShowHitEffect(bool isCritical)
     {
         if (tipo == InimigoTipo.Boss)
         {
@@ -532,9 +576,18 @@ public class Inimigo : MonoBehaviour
         }
         else
         {
-            LeanTween.color(gameObject, Color.white, 0.1f).setLoopPingPong(1);
+            if (isCritical)
+            {
+                LeanTween.color(gameObject, Color.yellow, 0.1f).setLoopPingPong(1);
+                LeanTween.scale(gameObject, transform.localScale * 1.2f, 0.1f).setEasePunch();
+            }
+            else
+            {
+                LeanTween.color(gameObject, Color.white, 0.1f).setLoopPingPong(1);
+            }
         }
     }
+
 
     private void ShowIceEffect()
     {

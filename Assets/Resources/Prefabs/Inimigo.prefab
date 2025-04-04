@@ -125,6 +125,7 @@ MonoBehaviour:
   gameController: {fileID: 0}
   projetilPrefab: {fileID: 5900686201061346758, guid: cb401c7bfcb19fd479ea5314826d16b1, type: 3}
   tipo: 0
+  powerUp: {fileID: 8571762277352781517, guid: 2dc50609353275c4da5bc0ce91561866, type: 3}
 --- !u!1 &8662867418593447545
 GameObject:
   m_ObjectHideFlags: 0

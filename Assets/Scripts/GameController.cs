@@ -67,6 +67,7 @@ public class GameController : MonoBehaviour
     public AudioClip upgradeEspecialSound;
     public AudioClip hoverSound;
     public AudioClip shotSound;
+    public AudioClip powerUpSound;
 
     public int mffCost = 50;
 
@@ -271,7 +272,9 @@ public class GameController : MonoBehaviour
                 {
                     if (cel.GetCellState() == CellState.vazia)
                     {
-                        AbrirMenuSelecao(cel);
+                        //AbrirMenuSelecao(cel);
+                        celulaAtual = cel;
+                        ComprarTorre();
                     }
                     else if (cel.GetCellState() == CellState.torre)
                     {
@@ -685,7 +688,7 @@ public class GameController : MonoBehaviour
         float buttonHeight = 30f;
 
         CriarBotaoSelecao("Torre", new Vector2(0, 20), buttonWidth, buttonHeight, Color.white, ComprarTorre);
-        CriarBotaoSelecao("Multiplicar X2", new Vector2(0, -20), buttonWidth, buttonHeight, Color.cyan, ComprarMFF);
+        //CriarBotaoSelecao("Multiplicar X2", new Vector2(0, -20), buttonWidth, buttonHeight, Color.cyan, ComprarMFF);
 
         menuSelecao.SetActive(false);
 

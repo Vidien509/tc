@@ -33,7 +33,8 @@ public class Torre : MonoBehaviour
     Color originalColor;
     Vector3 originalScale;
 
-    GameController gameController;
+    public GameController gameController;
+    private GameLoop gameLoop;
 
     private void Awake()
     {
@@ -63,6 +64,7 @@ public class Torre : MonoBehaviour
         bloomMaterial = new Material(Shader.Find("Hidden/BloomShader"));
         bloomMaterial.SetFloat("_BloomIntensity", bloomIntensity);
         gameController = FindObjectOfType<GameController>();
+        gameLoop = FindObjectOfType<GameLoop>();
     }
 
     void Update()
@@ -130,7 +132,17 @@ public class Torre : MonoBehaviour
             {
                 Atacar(alvoAtual);
             }
-            yield return new WaitForSeconds(intervaloAtaque);
+            float novoIntervalo = intervaloAtaque;
+            if(gameLoop != null)
+            {
+
+                if (gameLoop.getCodigoBonusConcedido() == 5 && gameLoop.getPowerUpConcedido())
+                {
+                    novoIntervalo = intervaloAtaque / 2;
+                }
+            }
+
+            yield return new WaitForSeconds(novoIntervalo);
         }
     }
 
@@ -188,14 +200,46 @@ public class Torre : MonoBehaviour
 
     void LancarProjetil(Transform alvo)
     {
-        gameController.audioSource.PlayOneShot(gameController.shotSound, 0.1f);
-        GameObject projetil = Instantiate(prefabProjetil, transform.position, Quaternion.identity);
-        Projetil scriptProjetil = projetil.GetComponent<Projetil>();
-        if (scriptProjetil != null)
+        if (gameLoop.getCodigoBonusConcedido() == 1 && gameLoop.getPowerUpConcedido())
         {
-            scriptProjetil.Configurar(alvo, dano, TipoTorreParaProjetil(tipo));
-            StartCoroutine(ApplyBloomEffect(scriptProjetil.gameObject));
-            StartCoroutine(ApplyBloomEffect(gameObject)); // Apply bloom to the tower as well
+            gameController.audioSource.PlayOneShot(gameController.shotSound, 0.1f);
+            gameController.audioSource.PlayOneShot(gameController.shotSound, 0.1f);
+            float offset = 0.3f;
+
+            Vector3 pos1 = transform.position + new Vector3(-offset, 0, 0);
+            Vector3 pos2 = transform.position + new Vector3(offset, 0, 0);
+
+            GameObject projetil1 = Instantiate(prefabProjetil, pos1, Quaternion.identity);
+            GameObject projetil2 = Instantiate(prefabProjetil, pos2, Quaternion.identity);
+
+            Projetil scriptProjetil1 = projetil1.GetComponent<Projetil>();
+            Projetil scriptProjetil2 = projetil2.GetComponent<Projetil>();
+
+            if (scriptProjetil1 != null)
+            {
+                scriptProjetil1.Configurar(alvo, dano, TipoTorreParaProjetil(tipo));
+                StartCoroutine(ApplyBloomEffect(scriptProjetil1.gameObject));
+            }
+
+            if (scriptProjetil2 != null)
+            {
+                scriptProjetil2.Configurar(alvo, dano, TipoTorreParaProjetil(tipo));
+                StartCoroutine(ApplyBloomEffect(scriptProjetil2.gameObject));
+            }
+
+            StartCoroutine(ApplyBloomEffect(gameObject));
+
+        }
+        else {
+            gameController.audioSource.PlayOneShot(gameController.shotSound, 0.1f);
+            GameObject projetil = Instantiate(prefabProjetil, transform.position, Quaternion.identity);
+            Projetil scriptProjetil = projetil.GetComponent<Projetil>();
+            if (scriptProjetil != null)
+            {
+                scriptProjetil.Configurar(alvo, dano, TipoTorreParaProjetil(tipo));
+                StartCoroutine(ApplyBloomEffect(scriptProjetil.gameObject));
+                StartCoroutine(ApplyBloomEffect(gameObject)); // Apply bloom to the tower as well
+            }
         }
     }
 
