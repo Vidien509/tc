@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class GameLoop : MonoBehaviour
 {
@@ -34,7 +35,7 @@ public class GameLoop : MonoBehaviour
     public bool respostaCorreta;
     public bool powerUpAtivado;
     public bool powerUpConcedido;
-    public int codigoBonusConcedido;
+    public List<PowerUpAtivo> powerUpsAtivos = new List<PowerUpAtivo>();
     public float tempoPowerUp;
 
     public TextMeshProUGUI textFase;
@@ -94,15 +95,14 @@ public class GameLoop : MonoBehaviour
     void StartGameLoop()
     {
         powerUpConcedido = false;
-        codigoBonusConcedido = -1;
         gameOver = false;
         powerUpAtivado = false;
         tempoPowerUp = 0f;
         multInimigos = 5;
         jogoIniciado = true;
         periodoCiclo = 30;
-        questionTime = 1f;
-        preparationTime = 1f;
+        questionTime = 10f;
+        preparationTime = 10f;
         fase = 1;
         listaSinal = new List<string> { " + ", " - ", " x ", " / " };
         menuQuestao.SetActive(false);
@@ -167,20 +167,51 @@ public class GameLoop : MonoBehaviour
             }
         }
 
-        if (powerUpConcedido)
+        if (powerUpConcedido && powerUpsAtivos.Count > 0)
         {
-            tempoPowerUp += Time.deltaTime;
-            if(tempoPowerUp >= 10f)
+            // Atualiza a UI
+            Debug.Log("POWER UP CONCEDIDO: " + string.Join(", ", powerUpsAtivos.Select(p => p.codigo)));
+
+            PowerUpUIManager.Instance.UpdatePowerUpUI(powerUpsAtivos.Select(p => p.codigo).ToArray());
+
+            // Atualiza temporizadores e remove power-ups expirados
+            bool powerUpExpirado = false;
+
+            for (int i = powerUpsAtivos.Count - 1; i >= 0; i--)
             {
-                powerUpConcedido = false;
-                if (codigoBonusConcedido == 3) {
-                    Inimigo[] inimigos = FindObjectsOfType<Inimigo>();
-                    foreach (Inimigo inimigo in inimigos)
-                    {
-                        inimigo.velocidade = inimigo.velocidadeBase;
-                    }
+                powerUpsAtivos[i].tempoRestante -= Time.deltaTime;
+
+                if (powerUpsAtivos[i].tempoRestante <= 0)
+                {
+                    int codigoExpirado = powerUpsAtivos[i].codigo;
+                    RemoveEfeitoPowerUp(codigoExpirado);
+                    powerUpsAtivos.RemoveAt(i);
+                    powerUpExpirado = true;
                 }
             }
+
+            if (powerUpExpirado)
+            {
+                PowerUpUIManager.Instance.UpdatePowerUpUI(powerUpsAtivos.Select(p => p.codigo).ToArray());
+            }
+
+            powerUpConcedido = false;
+        }
+    }
+
+    private void RemoveEfeitoPowerUp(int codigo)
+    {
+        switch (codigo)
+        {
+            case 3: // Caso específico do power-up 3 (congelar)
+                Inimigo[] inimigos = FindObjectsOfType<Inimigo>();
+                foreach (Inimigo inimigo in inimigos)
+                {
+                    inimigo.velocidade = inimigo.velocidadeBase;
+                }
+                break;
+
+                // Adicione outros casos conforme necessário
         }
     }
 
@@ -241,7 +272,7 @@ public class GameLoop : MonoBehaviour
             textRC.text = "PERFEITO!  2X";
 
             text.color = Color.green;
-            if (codigoBonusConcedido == 7 && powerUpConcedido)
+            if (powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(7) && powerUpConcedido)
             {
                 text.text = "+ $ 80";
                 gameController.recurso += 80;
@@ -262,7 +293,7 @@ public class GameLoop : MonoBehaviour
             textRC.text = "EXCELENTE!  1.5X";
 
             text.color = Color.green;
-            if (codigoBonusConcedido == 7 && powerUpConcedido)
+            if (powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(7) && powerUpConcedido)
             {
                 text.text = "+ $ 60";
                 gameController.recurso += 60;
@@ -283,7 +314,7 @@ public class GameLoop : MonoBehaviour
             textRC.text = "CORRETO!";
 
             text.color = Color.green;
-            if (codigoBonusConcedido == 7 && powerUpConcedido)
+            if (powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(7) && powerUpConcedido)
             {
                 text.text = "+ $ 40";
                 gameController.recurso += 40;
@@ -428,6 +459,7 @@ public class GameLoop : MonoBehaviour
 
     public void ProcessarResposta(bool novaQuestao)
     {
+        Debug.Log("PROCESSANDO RESPOSTA: " + novaQuestao);
         respostaProcessada = true;
         if (verificarResposta(inputField.text))
         {
@@ -477,7 +509,7 @@ public class GameLoop : MonoBehaviour
     }
     //public bool powerUpAtivado;
     //public bool powerUpConcedido;
-    //public int codigoBonusConcedido;
+    //public int powerUpsAtivos.Select(p => p.codigo).ToArray();
     //public float tempoPowerUp;
 
     public bool getPowerUpAtivado()
@@ -489,14 +521,5 @@ public class GameLoop : MonoBehaviour
         return powerUpConcedido;
     }
 
-    public int getCodigoBonusConcedido()
-    {
-        return codigoBonusConcedido;
-    }
-
-    public float getTempoPowerUp()
-    {
-        return tempoPowerUp;
-    }
 }
 

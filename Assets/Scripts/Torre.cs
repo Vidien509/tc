@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using TMPro;
 using System;
+using System.Linq;
 
 public enum TorreType { Basic, Gelo, Fogo, Plasma }
 
@@ -136,7 +137,7 @@ public class Torre : MonoBehaviour
             if(gameLoop != null)
             {
 
-                if (gameLoop.getCodigoBonusConcedido() == 5 && gameLoop.getPowerUpConcedido())
+                if (gameLoop.powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(5) && gameLoop.getPowerUpConcedido())
                 {
                     novoIntervalo = intervaloAtaque / 2;
                 }
@@ -200,7 +201,7 @@ public class Torre : MonoBehaviour
 
     void LancarProjetil(Transform alvo)
     {
-        if (gameLoop.getCodigoBonusConcedido() == 1 && gameLoop.getPowerUpConcedido())
+        if (gameLoop.powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(1) && gameLoop.getPowerUpConcedido())
         {
             gameController.audioSource.PlayOneShot(gameController.shotSound, 0.1f);
             gameController.audioSource.PlayOneShot(gameController.shotSound, 0.1f);

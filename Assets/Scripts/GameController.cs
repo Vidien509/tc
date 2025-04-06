@@ -78,7 +78,7 @@ public class GameController : MonoBehaviour
     {
         jogoIniciado = true;
         precoUpgrade = 15;
-        recurso = 1000;
+        recurso = 25;
         recursosEspeciais = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
         gameLoop = transform.GetComponent<GameLoop>();

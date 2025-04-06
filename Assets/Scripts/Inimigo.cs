@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -327,7 +328,12 @@ public class Inimigo : MonoBehaviour
         if (tempoQueimando > 0)
         {
             tempoQueimando -= Time.deltaTime;
-            ReceberDano((int)(danoQueimadura * Time.deltaTime));
+
+            // Aplica dano apenas uma vez por segundo
+            if (Mathf.FloorToInt(tempoQueimando) != Mathf.FloorToInt(tempoQueimando + Time.deltaTime))
+            {
+                ReceberDano(danoQueimadura, Color.HSVToRGB(0.09f, 1f, 1f));
+            }
         }
 
         if (tipo == InimigoTipo.Boss)
@@ -461,14 +467,19 @@ public class Inimigo : MonoBehaviour
 
     public void ReceberDano(int dano)
     {
+        ReceberDano(dano, Color.white);
+    }
+
+    public void ReceberDano(int dano, Color corDano)
+    {
         if (estaMorrendo) return;
 
-        if(gameLoop.codigoBonusConcedido == 0 && gameLoop.powerUpConcedido)
+        if(gameLoop.powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(0) && gameLoop.powerUpConcedido)
         {
             dano += Mathf.FloorToInt(dano * 0.2f); // Power up +20% de dano
         }
 
-        if (gameLoop.codigoBonusConcedido == 6 && gameLoop.powerUpConcedido)
+        if (gameLoop.powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(6) && gameLoop.powerUpConcedido)
         {
             dano += Mathf.FloorToInt(dano * 0.2f);
         }
@@ -485,7 +496,7 @@ public class Inimigo : MonoBehaviour
         }
         int randomValue = Random.Range(0, 10);
         bool critico = false;
-        if (gameLoop.codigoBonusConcedido == 6 && gameLoop.powerUpConcedido)
+        if (gameLoop.powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(6) && gameLoop.powerUpConcedido)
         {
             if(randomValue <= 1)
             {
@@ -496,20 +507,19 @@ public class Inimigo : MonoBehaviour
 
         if (critico)
         {
-            GameObject textoPopupI = Instantiate(gameLoop.textoPopup, new Vector3(-1f, 10f, 0), Quaternion.identity, transform);
+            GameObject textoPopupI = Instantiate(gameLoop.textoPopup, transform.position, Quaternion.identity, transform);
             TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
             text.fontSize = 14;
-            text.color = Color.yellow;
-            text.text = "" + dano;
+            text.color = Color.Lerp(corDano, Color.yellow, 1f);
+            text.text = "                                        -" + dano;
         }
         else
         {
             GameObject textoPopupI = Instantiate(gameLoop.textoPopup, transform.position, Quaternion.identity, transform);
-            textoPopupI.transform.position = new Vector3(0f, 10f, 0f);
             TextMeshPro text = textoPopupI.GetComponent<TextMeshPro>();
             text.fontSize = 8;
-            text.color = Color.white;
-            text.text = "" + dano;
+            text.color = corDano;
+            text.text = "                                        -" + dano;
         }
 
         vida -= dano;
@@ -518,7 +528,7 @@ public class Inimigo : MonoBehaviour
 
         if (vida <= 0)
         {
-            if (Random.value <= 0.5f) // 10% de chance
+            if (Random.value <= 0.2f) // 10% de chance
             {
                 Instantiate(powerUp, transform.position, Quaternion.identity);
             }

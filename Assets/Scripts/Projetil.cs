@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 using static UnityEngine.GraphicsBuffer;
 
 public enum ProjetilTipo { Basic, Gelo, Fogo, Plasma, Inimigo, Duplicado}
@@ -211,25 +212,25 @@ public class Projetil : MonoBehaviour
                 switch (tipo)
                 {
                     case ProjetilTipo.Basic:
-                        inimigo.ReceberDano(dano);
+                        inimigo.ReceberDano(dano, Color.white);
                         break;
                     case ProjetilTipo.Gelo:
-                        inimigo.ReceberDano(dano);
+                        inimigo.ReceberDano(dano, Color.cyan);
                         inimigo.Congelar(2f);
                         break;
                     case ProjetilTipo.Fogo:
-                        inimigo.ReceberDano(dano);
+                        inimigo.ReceberDano(dano, Color.HSVToRGB(0.09f, 1f, 1f));
                         inimigo.Queimar(3f, dano / 2);
                         break;
                     case ProjetilTipo.Plasma:
-                        inimigo.ReceberDano(dano);
+                        inimigo.ReceberDano(dano, Color.magenta);
                         Collider2D[] inimigosProximos = Physics2D.OverlapCircleAll(transform.position, 2f);
                         foreach (Collider2D col in inimigosProximos)
                         {
                             Inimigo inimigoProximo = col.GetComponent<Inimigo>();
                             if (inimigoProximo != null && inimigoProximo != inimigo)
                             {
-                                inimigoProximo.ReceberDano(dano / 2);
+                                inimigoProximo.ReceberDano(dano / 2, Color.magenta);
                             }
                         }
                         break;

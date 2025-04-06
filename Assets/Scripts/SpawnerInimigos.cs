@@ -34,8 +34,8 @@ public class SpawnerInimigos : MonoBehaviour
 
     public void StartSpawner(int quantidadeInimigos, float intervaloSpawn)
     {
-        // Detecta todas as c�lulas marcadas como n�cleo
-        faseBoss = 2;
+        // Detecta todas as células marcadas como n�cleo
+        faseBoss = 10;
         bossVivos = 0;
         nucleos = FindObjectsOfType<Nucleo>();
 

@@ -2926,6 +2926,8 @@ GameObject:
   - component: {fileID: 632078297}
   - component: {fileID: 632078296}
   - component: {fileID: 632078300}
+  - component: {fileID: 632078301}
+  - component: {fileID: 632078302}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -3123,6 +3125,38 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &632078301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632078295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 330e80563666a1e49b3d0d3041011a45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tamanhoRetangulo: {x: 200, y: 80}
+  espessuraBorda: 4
+  velocidadeCintilacao: 1
+  corBase: {r: 0.2, g: 0.6, b: 1, a: 0.8}
+--- !u!114 &632078302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 632078295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5ae353d9cacbc44bb8a9c61639ce783, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  activePowerUpUIs: []
+  startPosition: {x: -100, y: 50}
+  elementSize: {x: 200, y: 60}
+  spacing: 10
 --- !u!1001 &656530352
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8932,7 +8966,7 @@ MonoBehaviour:
   respostaCorreta: 0
   powerUpAtivado: 0
   powerUpConcedido: 0
-  codigoBonusConcedido: 0
+  powerUpsAtivos: []
   tempoPowerUp: 0
   textFase: {fileID: 1306415048}
   textPontos: {fileID: 972811565}
