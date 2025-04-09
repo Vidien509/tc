@@ -169,9 +169,6 @@ public class GameLoop : MonoBehaviour
 
         if (powerUpConcedido && powerUpsAtivos.Count > 0)
         {
-            // Atualiza a UI
-            Debug.Log("POWER UP CONCEDIDO: " + string.Join(", ", powerUpsAtivos.Select(p => p.codigo)));
-
             PowerUpUIManager.Instance.UpdatePowerUpUI(powerUpsAtivos.Select(p => p.codigo).ToArray());
 
             // Atualiza temporizadores e remove power-ups expirados
@@ -179,6 +176,7 @@ public class GameLoop : MonoBehaviour
 
             for (int i = powerUpsAtivos.Count - 1; i >= 0; i--)
             {
+                Debug.Log(powerUpsAtivos[i].codigo + " = TEMPO RESTANTE POWER UP ATIVO: " + powerUpsAtivos[i].tempoRestante);
                 powerUpsAtivos[i].tempoRestante -= Time.deltaTime;
 
                 if (powerUpsAtivos[i].tempoRestante <= 0)
@@ -192,10 +190,10 @@ public class GameLoop : MonoBehaviour
 
             if (powerUpExpirado)
             {
+                powerUpConcedido = false;
+                Debug.Log("=>> POWER UP EXPIRATO: " + string.Join(", ", powerUpsAtivos.Select(p => p.codigo)));
                 PowerUpUIManager.Instance.UpdatePowerUpUI(powerUpsAtivos.Select(p => p.codigo).ToArray());
             }
-
-            powerUpConcedido = false;
         }
     }
 

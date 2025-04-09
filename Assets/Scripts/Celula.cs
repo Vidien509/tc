@@ -342,6 +342,16 @@ public class Celula : MonoBehaviour
         return Sprite.Create(texture, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f));
     }
 
+    public void AtivarEfeitoEspecialCor(Color cor)
+    {
+        StartCoroutine(EfeitoArcoIris(cor));
+    }
+
+    public void DesativarEfeitoEspecialCor()
+    {
+        StopCoroutine("EfeitoArcoIris");
+    }
+
     public void AtivarEfeitoEspecial(TorreType tipo)
     {
         efeitoEspecialAtivo = true;

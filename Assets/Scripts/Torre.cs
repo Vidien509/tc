@@ -4,7 +4,7 @@ using TMPro;
 using System;
 using System.Linq;
 
-public enum TorreType { Basic, Gelo, Fogo, Plasma }
+public enum TorreType { Basic, Gelo, Fogo, Plasma, BonusFirerate, BonusDano, BonusCritico }
 
 public enum PoderEspecial
 {
@@ -139,7 +139,12 @@ public class Torre : MonoBehaviour
 
                 if (gameLoop.powerUpsAtivos.Select(p => p.codigo).ToArray().Contains(5) && gameLoop.getPowerUpConcedido())
                 {
+                    celula.AtivarEfeitoEspecialCor(Color.green);
                     novoIntervalo = intervaloAtaque / 2;
+                }
+                else
+                {
+                    celula.DesativarEfeitoEspecialCor();
                 }
             }
 

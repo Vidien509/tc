@@ -68,7 +68,7 @@ public class PowerUpUIManager : MonoBehaviour
 
             if (!hasUI)
             {
-                GameObject newUI = RetangulosPowerUp.Instance.CriarRetangulo(GetPowerUpColor(code));
+                GameObject newUI = RetangulosPowerUp.Instance.CriarRetangulo(GetPowerUpColor(code), 20f);
                 ConfigurePowerUpUI(newUI, code);
 
                 PowerUpUI newPowerUpUI = new PowerUpUI();
@@ -187,9 +187,11 @@ public class PowerUpUIManager : MonoBehaviour
 
         for (int i = 0; i < activePowerUpUIs.Count; i++)
         {
-            RectTransform rt = activePowerUpUIs[i].uiElement.GetComponent<RectTransform>();
-            float posY = startY - (rt.sizeDelta.y + 20) * i;
-            rt.anchoredPosition = new Vector2(-10f, posY); // -10 no X para margem direita
+            if(activePowerUpUIs[i].uiElement != null){
+                RectTransform rt = activePowerUpUIs[i].uiElement.GetComponent<RectTransform>();
+                float posY = startY - (rt.sizeDelta.y + 20) * i;
+                rt.anchoredPosition = new Vector2(-10f, posY); // -10 no X para margem direita
+            }
         }
     }
 }

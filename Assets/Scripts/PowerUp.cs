@@ -126,7 +126,7 @@ public class PowerUp : MonoBehaviour
                     }
 
                     gameLoop.powerUpConcedido = true;
-                    gameLoop.powerUpsAtivos.Add(new PowerUpAtivo(codigoBonusAtivo, 10f));
+                    gameLoop.powerUpsAtivos.Add(new PowerUpAtivo(codigoBonusAtivo, 20f));
                     gameLoop.tempoPowerUp = 0f;
                     if (codigoBonusAtivo == 4)
                     {
