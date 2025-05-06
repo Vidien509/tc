@@ -175,7 +175,7 @@ public class Grid : MonoBehaviour
                 cel.SetCellState(CellState.vazia);
                 cel.UpdateCellVisuals();
 
-                int centerX = gridArray.GetLength(0) / 2;
+                int centerX = gridArray.GetLength(0) - 1;
                 int centerY = gridArray.GetLength(1) / 2;
 
                 if (x == centerX && y == centerY)

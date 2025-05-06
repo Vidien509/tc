@@ -199,6 +199,7 @@ public class Celula : MonoBehaviour
                     corBorda = Color.green;
                     Debug.LogError("Erro ao converter a cor hexadecimal para núcleo!");
                 }
+                renderer.color = Color.green;
                 torreVisual.SetActive(false);
                 break;
             case CellState.campoMultiplicacao:

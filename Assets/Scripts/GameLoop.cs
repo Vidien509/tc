@@ -86,22 +86,61 @@ public class GameLoop : MonoBehaviour
 
     public int multInimigos;
 
+    TimerManager timerPrep;
+    TimerManager timerAtaque;
+    TimerManager timerQuestao;
+
+
     private void Start()
     {
         painelTut1.SetActive(true);
         painelGameOver.SetActive(false);
+        timerPrep = TimerManager.Create(
+            position: new Vector2(100, 800),
+            size: 150f,
+            timerColor: Color.yellow,
+            endColor: Color.black,
+            textColor: Color.white,
+            name: "Fase de Preparação",
+            onComplete: () => Debug.Log("Timer: Fase preparação completo!")
+        );
+
+        timerAtaque = TimerManager.Create(
+            position: new Vector2(100, 800),
+            size: 150f,
+            timerColor: Color.red,
+            endColor: Color.black,
+            textColor: Color.white,
+            name: "Fase de Ataque",
+            onComplete: () => Debug.Log("Timer: Fase de ataque completo!")
+        );
+
+        timerQuestao = TimerManager.Create(
+            position: new Vector2(100, 800),
+            size: 150f,
+            timerColor: Color.blue,
+            endColor: Color.black,
+            textColor: Color.white,
+            name: "Fase de Respostas",
+            onComplete: () => Debug.Log("Timer: Fase respondendo completo!")
+        );
+
     }
 
     void StartGameLoop()
     {
+        timerQuestao.ResetTimer();
+        timerAtaque.ResetTimer();
+        timerPrep.ResetTimer();
+
         powerUpConcedido = false;
         gameOver = false;
         powerUpAtivado = false;
         tempoPowerUp = 0f;
         multInimigos = 5;
         jogoIniciado = true;
-        periodoCiclo = 30;
-        questionTime = 10f;
+        periodoCiclo = 25;
+        questionTime = 30f;
         preparationTime = 10f;
         fase = 1;
         listaSinal = new List<string> { " + ", " - ", " x ", " / " };
@@ -117,6 +156,7 @@ public class GameLoop : MonoBehaviour
         gameController.StartGameController();
     }
 
+
     void Update()
     {
         if (!gameOver && !powerUpAtivado)
@@ -127,6 +167,11 @@ public class GameLoop : MonoBehaviour
 
                 if (faseRespondendo)
                 {
+                    if (!timerQuestao.isActive)
+                    {
+                        timerQuestao.SetTime(questionTime, true);
+                        timerQuestao.StartTimer();
+                    }
                     // Fase de responder perguntas
                     tempoQuestao += Time.deltaTime;
                     if (Input.GetKeyDown(KeyCode.Return) && !respostaProcessada)
@@ -148,6 +193,11 @@ public class GameLoop : MonoBehaviour
                 }
                 else if (inPreparationPhase)
                 {
+                    if (!timerPrep.isActive)
+                    {
+                        timerPrep.SetTime(preparationTime);
+                        timerPrep.StartTimer();
+                    }
                     if (tempoCiclo >= preparationTime)
                     {
                         // Finaliza a fase de preparação e inicia o combate
@@ -156,9 +206,16 @@ public class GameLoop : MonoBehaviour
                 }
                 else
                 {
+                    if (!timerAtaque.isActive)
+                    {
+                        timerAtaque.SetTime(periodoCiclo);
+                        timerAtaque.StartTimer();
+                    }
                     // Fase de combate
                     if (tempoCiclo >= periodoCiclo || spawner.inimigosVivos <= 0)
                     {
+                        timerAtaque.PauseTimer();
+                        timerAtaque.ResetTimer();
                         FinalizarFaseCombate();
                     }
                 }
@@ -176,7 +233,7 @@ public class GameLoop : MonoBehaviour
 
             for (int i = powerUpsAtivos.Count - 1; i >= 0; i--)
             {
-                Debug.Log(powerUpsAtivos[i].codigo + " = TEMPO RESTANTE POWER UP ATIVO: " + powerUpsAtivos[i].tempoRestante);
+                //Debug.Log(powerUpsAtivos[i].codigo + " = TEMPO RESTANTE POWER UP ATIVO: " + powerUpsAtivos[i].tempoRestante);
                 powerUpsAtivos[i].tempoRestante -= Time.deltaTime;
 
                 if (powerUpsAtivos[i].tempoRestante <= 0)
@@ -191,7 +248,7 @@ public class GameLoop : MonoBehaviour
             if (powerUpExpirado)
             {
                 powerUpConcedido = false;
-                Debug.Log("=>> POWER UP EXPIRATO: " + string.Join(", ", powerUpsAtivos.Select(p => p.codigo)));
+                //Debug.Log("=>> POWER UP EXPIRATO: " + string.Join(", ", powerUpsAtivos.Select(p => p.codigo)));
                 PowerUpUIManager.Instance.UpdatePowerUpUI(powerUpsAtivos.Select(p => p.codigo).ToArray());
             }
         }

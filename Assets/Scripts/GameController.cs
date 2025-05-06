@@ -16,7 +16,7 @@ public class GameController : MonoBehaviour
     private ColorBlock corOriginal;
 
     private CellState stateMenuSelecionado = CellState.torre;
-    private int precoTorre = 10;
+    private int precoTorre = 25;
     private int precoUpgrade;
 
     public GameObject textoPopup;
@@ -77,7 +77,7 @@ public class GameController : MonoBehaviour
     public void StartGameController()
     {
         jogoIniciado = true;
-        precoUpgrade = 15;
+        precoUpgrade = 30;
         recurso = 25;
         recursosEspeciais = 0;
         spawnerInimigos = transform.GetComponent<SpawnerInimigos>();
@@ -87,7 +87,7 @@ public class GameController : MonoBehaviour
         // Create a new GameObject for the grid and add the Grid component
         GameObject gridObject = new GameObject("Grid");
         gameGrid = gridObject.AddComponent<Grid>();
-        gameGrid.InitializeGrid(14, 10, 4f, new Vector3(-30, -20, 0), cellPrefab, this.transform);
+        gameGrid.InitializeGrid(7, 7, 5f, new Vector3(0, -20, 0), cellPrefab, this.transform);
         gameGrid.audioSource = audioSource;
         gameGrid.hoverSound = hoverSound;
         gameGrid.SetRecursosAleatorios();

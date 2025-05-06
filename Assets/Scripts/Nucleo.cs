@@ -26,6 +26,7 @@ public class Nucleo : MonoBehaviour
     public int nivel;
 
     Color originalColor;
+    Color verdeFlorestal = new Color(0.13f, 0.55f, 0.13f);
     public Celula cel;
     private TextMeshPro textoVida;
     private TextMeshPro textoEscudo;
@@ -54,7 +55,7 @@ public class Nucleo : MonoBehaviour
     void Start()
     {
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
-        originalColor = renderer.color;
+        originalColor = Color.green;
         timerRegen = 0f;
         textoVida = transform.GetChild(0).GetComponent<TextMeshPro>();
         textoVida.fontSize = 3.5f;
@@ -82,7 +83,7 @@ public class Nucleo : MonoBehaviour
 
     void Update()
     {
-        // Regenera��o de vida
+        // Regeneração de vida
         if (vida < vidaMaxima)
         {
             timerRegen += Time.deltaTime;
@@ -228,14 +229,14 @@ public class Nucleo : MonoBehaviour
     {
         Debug.Log("INDICAR VIDA");
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
-        renderer.color = Color.green;
+        renderer.color = verdeFlorestal;
         yield return new WaitForSeconds(0.3f);
         float fadeDuration = 0.5f;
         float elapsedTime = 0f;
 
         while (elapsedTime < fadeDuration)
         {
-            renderer.color = Color.Lerp(Color.green, originalColor, elapsedTime / fadeDuration);
+            renderer.color = Color.Lerp(verdeFlorestal, originalColor, elapsedTime / fadeDuration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
