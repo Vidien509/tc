@@ -26,6 +26,7 @@ public class GameLoop : MonoBehaviour
     public GameObject nivelQuestao;
 
     public GameObject painelGameOver;
+    public GameObject painelPause;
     public TextMeshProUGUI gameOverPontos;
     public TextMeshProUGUI gameOverTitulo;
     public bool gameOver;
@@ -44,6 +45,7 @@ public class GameLoop : MonoBehaviour
 
     public TextMeshProUGUI textRespCorreta;
     public static bool tutorialMostrado = false;
+    public bool pausado = false;
 
     private int _fase;
     public int fase
@@ -95,6 +97,7 @@ public class GameLoop : MonoBehaviour
     {
         painelTut1.SetActive(true);
         painelGameOver.SetActive(false);
+        painelPause.SetActive(false);
         timerPrep = TimerManager.Create(
             position: new Vector2(100, 800),
             size: 150f,
@@ -159,7 +162,16 @@ public class GameLoop : MonoBehaviour
 
     void Update()
     {
-        if (!gameOver && !powerUpAtivado)
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Time.timeScale = Time.timeScale == 0 ? 1 : 0;
+            pausado = pausado ? false : true;
+            painelPause.SetActive(painelPause.active ? false : true);
+            btnProximo.SetActive(btnProximo.active ? false : true);
+            btnProximo.GetComponentInChildren<TextMeshProUGUI>().text = "Reiniciar";
+        }
+
+        if (!gameOver && !powerUpAtivado && !pausado)
         {
             if (jogoIniciado)
             {
@@ -215,6 +227,7 @@ public class GameLoop : MonoBehaviour
                     if (tempoCiclo >= periodoCiclo || spawner.inimigosVivos <= 0)
                     {
                         timerAtaque.PauseTimer();
+                        timerAtaque.SetVisibility(false);
                         timerAtaque.ResetTimer();
                         FinalizarFaseCombate();
                     }

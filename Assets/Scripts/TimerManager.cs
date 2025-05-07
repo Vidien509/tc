@@ -264,7 +264,7 @@ public class TimerManager : MonoBehaviour
         SetVisibility(false);
     }
 
-    private void SetVisibility(bool visible)
+    public void SetVisibility(bool visible)
     {
         backgroundCircle.enabled = visible;
         fillCircle.enabled = visible;

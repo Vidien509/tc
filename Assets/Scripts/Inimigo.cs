@@ -434,14 +434,18 @@ public class Inimigo : MonoBehaviour
         healthBarBackground.transform.SetParent(healthBarObject.transform);
         healthBarBackground.transform.localScale = new Vector3(1, 0.05f, 0.1f);
         healthBarBackground.transform.localPosition = Vector3.zero;
-        healthBarBackground.GetComponent<Renderer>().material.color = Color.gray;
+        Material healthBarBgMat = new Material(Shader.Find("Standard"));
+        healthBarBgMat.color = Color.gray;
+        healthBarBackground.GetComponent<Renderer>().material = healthBarBgMat;
 
         GameObject healthBarFillObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        healthBarFill = healthBarFillObject.transform;
+        healthBarFill = healthBarFillObject.transform;  
         healthBarFill.SetParent(healthBarObject.transform);
         healthBarFill.localScale = new Vector3(1, 0.05f, 0.1f);
         healthBarFill.localPosition = Vector3.zero;
-        healthBarFillObject.GetComponent<Renderer>().material.color = Color.green;
+        Material healthBarFillMat = new Material(Shader.Find("Standard"));
+        healthBarFillMat.color = Color.green;
+        healthBarFillObject.GetComponent<Renderer>().material = healthBarFillMat;
 
         Destroy(healthBarBackground.GetComponent<Collider>());
         Destroy(healthBarFillObject.GetComponent<Collider>());
